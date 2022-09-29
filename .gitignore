@@ -3,6 +3,10 @@
 !pysrl
 !README.md
 
+# Backups
+backups/
+backup/
+
 # Result images, data and input
 results/
 input/
