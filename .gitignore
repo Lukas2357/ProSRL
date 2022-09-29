@@ -4,7 +4,6 @@ backup/
 
 # Result images, raw_data and input
 results/
-input/
 raw_data/
 tests/
 plotting/
