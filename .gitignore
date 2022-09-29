@@ -1,8 +1,3 @@
-/*
-!.gitignore
-!pysrl
-!README.md
-
 # Backups
 backups/
 backup/
@@ -13,6 +8,11 @@ input/
 raw_data/
 tests/
 plotting/
+notes/
+orga/
+paper/
+temp/
+
 
 # Tester module
 tester/
