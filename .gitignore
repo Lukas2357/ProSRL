@@ -1,6 +1,7 @@
 /*
 !.gitignore
 !pysrl
+!README.md
 
 # Result images, data and input
 results/
