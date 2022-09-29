@@ -11,7 +11,7 @@ Standardmäßig ist das package in einem Ordner src abgelegt, der wiederum in ei
 Aus diesem Projektordner können Python Dateien (oder auch Jupyter Notebooks) durch
 
 ```python
-from src.pysrl.MODULNAME.SUBMODULNAME import FUNKTIONSNAME
+from pysrl.pysrl import FUNKTIONSNAME
 ```
 
 alle beliebigen Funktionen importieren. Alternativ kann das package auch mit pip installiert werden, sodass jede Python Datei im System (mit dem richtigen Interpreter) alle Funktionen importieren kann mittels
@@ -60,7 +60,7 @@ pip install .
 pysrl steht jetzt als package zur Verfügung und kann überall importiert werden. Die main.py Datei kann also auch außerhalb des Projektordners ausgeführt werden, es muss dann nur der Import geändert werden:
 
 ```python
-from src.pysrl.analysis import Analyst  # ändern zu
+from pysrl.pysrl import Analyst  # ändern zu
 from pysrl.analysis import Analyst
 ```
 

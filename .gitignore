@@ -7,10 +7,10 @@
 backups/
 backup/
 
-# Result images, data and input
+# Result images, raw_data and input
 results/
 input/
-data/
+raw_data/
 tests/
 plotting/
 
