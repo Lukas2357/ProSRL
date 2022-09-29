@@ -2,8 +2,6 @@
 !.gitignore
 !pysrl
 
-.credentials
-
 # Result images, data and input
 results/
 input/
