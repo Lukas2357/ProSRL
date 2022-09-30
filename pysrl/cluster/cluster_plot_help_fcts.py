@@ -1,12 +1,15 @@
 """Helper functions for the cluster_plot_fcts.py module"""
 import difflib
 import os
+from typing import Callable
+
 from matplotlib.axes import Axes
 import pandas as pd
 from matplotlib import pyplot as plt
+from scipy.stats import pearsonr, spearmanr
 
 from ..config.constants import RECENT_RESULTS_PATH
-from ..preparer.prep_fcts import load_transformed_data
+from ..config.helper import load_data
 
 
 def init_subplots_plot(n_plots: int, scales=(3.5, 3.2)) -> list:
@@ -168,7 +171,7 @@ def get_user_learntype_strings(exclude="G", replace=None) -> dict:
     if replace is None:
         replace = {'I': 'U', 'J': 'B'}
 
-    df = load_transformed_data()[["User", "LearnType"]]
+    df = load_data('data_trafo.csv')[["User", "LearnType"]]
 
     learn_type_labels = ["T", "I", "U", "K", "J", "B", "G"]
     df["LearnType"] = df["LearnType"].map(
@@ -247,3 +250,82 @@ def get_learntype_string_ratios(user_strings=None, pad='max', exclude="G",
         df = df.sort_values(by="sim_ratio", ascending=False)
 
     return df
+
+
+def cor_test(method='pearson') -> Callable:
+    """Get function for p-value of correlation test with method specified
+
+    Args:
+        method (str): Corr method to test
+
+    Returns:
+        Callable: Function to get two-sided p-value for correlation != 0
+
+    """
+    if method == 'pearsonr':
+        def pvalue(x, y):
+            return pearsonr(x, y)[1]
+    else:
+        def pvalue(x, y):
+            return spearmanr(x, y)[1]
+
+    return pvalue
+
+
+def get_significant_correlations(method, pearson, p_pearson, spearman,
+                                 p_spearman, threshold, min_corr):
+    """Get a df with significant correlations and corresponding p-values
+
+    Args:
+        method (str): Corr method to test
+        p_pearson (pd.DataFrame): pearson p-values to check for significance
+        pearson (pd.DataFrame): corresponding correlation values
+        p_spearman (pd.DataFrame): spearman p-values to check for significance
+        spearman (pd.DataFrame): corresponding correlation values
+        threshold (float): The threshold p-value to consider significant
+        min_corr (float): The minimum correlation to check
+
+    Returns:
+        Tuple: Df of significant correlations with columns of
+                - first feature
+                - second feature
+                - correlation coefficient
+                - two-sided p-value against r=0
+                - priority category of feature 1
+                - priority category of feature 2
+               and copy of that df with the first two columns set to the last
+               two to get a numeric df that can be plotted in a heatmap
+
+    """
+    prio = load_data('features_categories.csv',
+                     rm_first_col=False).set_index('Feature')
+    label = 'p-value / %'
+    cols = ['Feature 1', 'Feature 2', 'pearson', label, 'spearman', label,
+            'Prio 1', 'Prio 2']
+    significant = set()
+    corrs = spearman if method == 'spearman' else pearson
+    pvalues = p_spearman if method == 'spearman' else p_pearson
+
+    for col in pvalues.columns:
+        for idx, p in enumerate(pvalues[col]):
+            row = pvalues.index[idx]
+            corr = corrs.loc[col, pvalues.index[idx]]
+            prio1, prio2 = prio.loc[col, 'Prio'], prio.loc[row, 'Prio']
+            if p < threshold and min_corr < abs(corr):
+                c_pearson = pearson.loc[col, pvalues.index[idx]]
+                c_spearman = spearman.loc[col, pvalues.index[idx]]
+                c_pearson_p = p_pearson.loc[col, pvalues.index[idx]]
+                c_spearman_p = p_spearman.loc[col, pvalues.index[idx]]
+
+                entry = c_pearson, c_pearson_p, c_spearman, c_spearman_p
+                if (row, col) + entry + (prio2, prio1) not in significant:
+                    significant.add((col, row) + entry + (prio1, prio2))
+
+    significant = pd.DataFrame(significant, columns=cols, dtype=float)
+    significant = significant.sort_values(method, ascending=False)
+    significant = significant.reset_index().drop('index', axis=1)
+    numeric = significant.copy()
+    numeric['Feature 1'] = numeric['Prio 1']
+    numeric['Feature 2'] = numeric['Prio 2']
+
+    return significant, numeric

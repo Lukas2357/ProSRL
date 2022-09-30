@@ -227,7 +227,7 @@ def add_task_difficulties(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The extended df
     
     """
-    diffs = load_input('../../input/task_difficulties.csv', columns=['Label', 'Niveau'])
+    diffs = load_input('task_difficulties.csv', columns=['Label', 'Niveau'])
     diffs.columns = ['Label', 'Niveau']
     mapper = dict(zip(['niedrig', 'mittel', 'hoch'], range(3)))
     diffs['difficulty'] = diffs['Niveau'].map(mapper).astype(int)
@@ -251,7 +251,7 @@ def add_task_results(df: pd.DataFrame) -> pd.DataFrame:
     
     """
     required_columns = ['User', 'Date/Time', 'ResponsTask', 'Task']
-    results = load_input('../../input/task_results.csv', columns=required_columns)
+    results = load_input('task_results.csv', columns=required_columns)
     results.dropna(subset=['ResponsTask'], inplace=True)
     mapper = dict(zip(['f', 'twr', 'r'], range(3)))
     results['ResponsTask'] = results['ResponsTask'].map(mapper).astype(int)
@@ -285,7 +285,7 @@ def add_test_results(df: pd.DataFrame) -> pd.DataFrame:
     """
     required_columns = ['User', 'Date/Time', 'Testergebnis 1', 'Test',
                         'Testergebnis 2']
-    results = load_input('../../input/test_results.csv', columns=required_columns)
+    results = load_input('test_results.csv', columns=required_columns)
     
     results.dropna(subset=['Testergebnis 1'], inplace=True)
     results.dropna(subset=['Testergebnis 2'], inplace=True)

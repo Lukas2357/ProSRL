@@ -23,11 +23,12 @@ def clear_directory(path: Path):
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
-def load_data(filename: str) -> pd.DataFrame:
+def load_data(filename: str, rm_first_col=True) -> pd.DataFrame:
     """Load any raw_data csv file from the raw_data folder
 
     Args:
         filename (str): Name of the csv file to load
+        rm_first_col (bool): Whether to remove the first column (xlsx files)
 
     Returns:
         pd.DataFrame: Dataframe of all file raw_data
@@ -36,7 +37,11 @@ def load_data(filename: str) -> pd.DataFrame:
     data_file = os.path.join(get_root(), "data", filename)
     data_df = pd.read_csv(data_file)
 
-    return data_df.iloc[:, 1:]
+    if rm_first_col:
+        return data_df.iloc[:, 1:]
+
+    else:
+        return data_df
 
 
 def load_input(filename: str, columns=None) -> pd.DataFrame:

@@ -13,44 +13,114 @@ from ..config.constants import RESULTS_PATH
 pd.options.mode.chained_assignment = None  # default='warn'
 
 
-def correlation_heatmap(features=None, df=None, save=False, dpi=300, 
-                        filename='cor_heatmap', cbar=False,
-                        all_with_these_features=False):
+def heatmap(title, data, save, path=None, filename='map', dpi=120, **kwargs):
+    """Generic heatmap function
+
+    Args:
+        title (string): Title of the heatmap
+        data (pd.DataFrame): The df to plot
+        save (bool): Whether to save the heatmap
+        dpi (int): Dots per inch to save the plot
+        filename (str): The filename to save the plot
+        path (str): Path to save the plots
+        kwargs (dict): Additional keyword arguments for sns.heatmap
+
+    Returns:
+        plt.figure: The figure handle
+
+    """
+    rows, cols = len(data.index), len(data.columns)
+    fig = plt.figure(figsize=(rows, cols / 4 + 2), dpi=dpi)
+    sns.heatmap(data, annot=True, **kwargs)
+    plt.title(title, fontweight='bold')
+
+    if path is None:
+        spath = os.path.join(RESULTS_PATH, 'heatmaps', filename)
+    else:
+        spath = os.path.join(path, filename)
+
+    save_figure(save, dpi, spath, fig)
+
+    return fig
+
+
+def correlation_heatmap(features=None, df=None, save=False, dpi=150,
+                        filename='cor_heatmap', cbar=False, path=None,
+                        all_with_these_features=False, method='pearson',
+                        plot_corr=True, pvalues=True, significant=True,
+                        plot_significant=True, threshold=10, min_cor=0):
     """Heatmap of all correlations of the prepared dataframe
 
     Args:
-        features (list): The features to which all correlations are shown
-        df (any): The data to plot, if None it will be loaded from raw_data prep
+        features (list): The features for which all correlations are shown
+        df (any): The data to plot, if None it will be loaded from data prep
         save (bool): Whether to save the plot
         dpi (int): Dots per inch to save the plot
         filename (str): The filename to save the plot
         cbar (bool): Whether to show the colorbar
+        path (str): Path to save the plots
         all_with_these_features (bool): Show all cors of given features
+        method (str): Either 'pearson' or 'spearman' for the correlation type
+        plot_corr (bool): Whether to plot the correlation heatmap
+        pvalues (bool): Whether to show the p-values as separate heatmap
+        significant (bool): Whether to show the significant correlation values
+        plot_significant (bool): Whether to plot the significant correlations'
+        threshold (float): The threshold value for the correlations
+        min_cor (float): The minimum correlation
 
-    """    
+    """
     if df is None:
-        df = load_prep_data()
-        
+        df = load_data('data_prep_with_personal.csv')
+
     df = df.drop(['User'], axis=1)
-               
+
     if features is None:
         features = df.columns
-    
+
     if isinstance(features, str):
         features = [features]
 
     if not all_with_these_features:
         df = df[features]
-        
-    fig = plt.figure(figsize=(len(features), len(df.columns)/4+2))
-    sns.heatmap(df.corr()[features], annot=True, fmt='.3f', vmin=-1, vmax=1,
-                cbar=cbar)
-    plt.suptitle('Feature correlation heatmap', fontweight='bold')
 
-    path = os.path.join(RESULTS_PATH, 'heatmaps', filename)
-    save_figure(save, dpi, path, fig)
-    
+    pearson = df.corr(method='pearson')[features]
+    spearman = df.corr(method='spearman')[features]
+    correlation = pearson if method == 'pearson' else spearman
+    figures = []
+
+    if plot_corr:
+        kwargs = dict(fmt='.3f', vmin=-1, vmax=1, cbar=cbar)
+        fig = heatmap('Feature correlations', correlation, save, **kwargs)
+        figures.append(fig)
+
+    if pvalues or significant:
+
+        p_pearson = 100 * df.corr(method=cor_test('pearson'))[features]
+        p_spearman = 100 * df.corr(method=cor_test('spearman'))[features]
+        p = p_pearson if method == 'pearson' else p_spearman
+
+        cmap = sns.diverging_palette(133, 10, as_cmap=True)
+
+        if pvalues:
+            kwargs = dict(fmt='.2f', vmin=0, vmax=100, cbar=cbar, cmap=cmap)
+            title = 'Two sided feature correlation p-values / %'
+            fig = heatmap(title, p, save, **kwargs)
+            figures.append(fig)
+
+        if significant:
+
+            args = (method, pearson, p_pearson, spearman, p_spearman,
+                    threshold, min_cor)
+            df, numeric = get_significant_correlations(*args)
+
+            if len(df.index) > 0 and plot_significant:
+
+                fig = plot_significant_corrs(numeric, df, dpi, save, path,
+                                             filename)
+                figures.append(fig)
+
     plt.show()
+    return figures, df
 
 
 def user_heatmap(user=None, features=None, df=None, save=False, dpi=300, 
@@ -305,3 +375,97 @@ def string_ratio_grid(ratios_df=None, clustermap=True, pad='max', exclude='G',
         save_figure(save=save, path=path, dpi=dpi, fig_format='jpg')
 
     return grid
+
+
+def plot_significant_corrs(numeric, df, dpi, save, path, filename):
+    """Plot the significant correlations as a heatmap
+
+    Args:
+        numeric (pd.Dataframe): numeric df to show
+        df (pd.DataFrame): corresponding df potentially with strings
+        dpi (int): dots per inch for the figure
+        save (bool): Whether to save the plot
+        path (str): Path to save the plots
+        filename (str): Name of the file to save
+
+    """
+    cmap1 = sns.diverging_palette(133, 10, as_cmap=True)
+    cmap2 = sns.diverging_palette(220, 50, as_cmap=True)
+    numeric = numeric.drop(['Prio 1', 'Prio 2'], axis=1)
+    df = df.drop(['Prio 1', 'Prio 2'], axis=1)
+
+    fig = plt.figure(figsize=(12, len(numeric) // 4 + 2), dpi=dpi)
+
+    for col in numeric:
+        mask = numeric.copy()
+        for col_m in mask:
+            mask[col_m] = col != col_m
+        if col in ['pearson', 'spearman']:
+            sns.heatmap(numeric, annot=True, fmt='.3f', vmin=-1,
+                        vmax=1, cbar=False, mask=mask)
+        elif 'F' in col:
+            sns.heatmap(numeric, annot=df, fmt='', cbar=False,
+                        mask=mask, cmap=cmap2, vmin=1, vmax=8)
+        elif 'p-value' in col:
+            sns.heatmap(numeric, annot=True, fmt='.4f', mask=mask,
+                        vmin=0, vmax=5, cbar=False, cmap=cmap1)
+
+    plt.title('Significant correlations', fontweight='bold')
+
+    if path is None:
+        spath = os.path.join(RESULTS_PATH, 'heatmaps',
+                             filename + '_sgnf')
+    else:
+        spath = os.path.join(path, filename + '_sgnf')
+
+    save_figure(save, dpi, spath, fig)
+
+    return fig
+
+
+def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
+                              cor_threshold=0.8, save=True, path=''):
+    """Plot an overview heatmap for significant correlations
+
+    Args:
+        method (str): The type of correlation to plot (spearman, pearson)
+        p_threshold (float): The threshold for the p-value in %
+        min_cor (float): The minimum correlation to consider
+        cor_threshold (float): The threshold for abs(correlation)
+        save (bool): Whether to save the plot
+        path (str): Path to save the plots
+
+    Returns:
+        plt.figure: The figure handle
+
+    """
+    prios = load_data('features_categories.csv', rm_first_col=False)
+    features = list(prios.loc[prios.Prio != 0, 'Feature'])
+    path = os.path.join(path, "Heatmaps")
+
+    kwargs = dict(plot_corr=False, pvalues=False, significant=True,
+                  method=method, plot_significant=False, threshold=p_threshold,
+                  min_cor=min_cor)
+
+    _, df = correlation_heatmap(features=features, save=False, **kwargs)
+
+    for idx in df.index:
+
+        prio1, prio2 = df.loc[idx, "Prio 1"], df.loc[idx, "Prio 2"]
+        feature1, feature2 = df.loc[idx, "Feature 1"], df.loc[idx, "Feature 2"]
+        corr = df.loc[idx, method]
+
+        if abs(corr) > cor_threshold:
+            if prio2 >= prio1:
+                if feature1 in features:
+                    features.remove(feature1)
+            elif prio1 > prio2:
+                if feature2 in features:
+                    features.remove(feature2)
+
+    kwargs['plot_significant'] = True
+
+    fig, _ = correlation_heatmap(features=features, save=save, path=path,
+                                 **kwargs)
+
+    return fig, features
