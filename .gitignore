@@ -5,6 +5,7 @@ backup/
 # Result images, raw_data and input
 results/
 raw_data/
+plotting/
 tests/
 notes/
 orga/
