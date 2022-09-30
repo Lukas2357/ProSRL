@@ -25,9 +25,9 @@ def merge_pers_feature(rm_incomplete_user=True, fill_na=True) -> pd.DataFrame:
     
     """
     required_columns = ['Person', 'Rasch_Stacking_Niveaustufen_Differenz']
-    data = load_input('../../input/person_features.csv', columns=required_columns)
+    data = load_input('person_features.csv', columns=required_columns)
     required_columns = ['Person', 'User', 'user_id']
-    relation = load_input('../../input/relation_user_code.csv', columns=required_columns)
+    relation = load_input('relation_user_code.csv', columns=required_columns)
 
     df = pd.merge(relation, data).sort_values('user_id')
     df = df.drop(['user', 'Person', 'Unnamed: 0'], axis=1)
@@ -38,7 +38,7 @@ def merge_pers_feature(rm_incomplete_user=True, fill_na=True) -> pd.DataFrame:
     columns_rf[-1] = 'RF_Diff'
     df.columns = ['User'] + columns_nivst + list(df.columns)[4:-3] + columns_rf
 
-    tot = pd.merge(df, load_prep_data())
+    tot = pd.merge(df, load_prep_data(), left_on='User', right_index=True)
 
     if rm_incomplete_user:
         tot = tot.dropna(subset=['NSt_Post'])

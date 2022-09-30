@@ -17,7 +17,7 @@ def do_trafo(formats=('csv', )):
     print("Transform data_clean.csv to get proper numerical dataframe")
 
     # Load the cleaned up raw_data from data_clean.csv
-    df = pd.read_csv(path.join(DATA_PATH, "../../data/data_clean.csv")).iloc[:, 1:]
+    df = pd.read_csv(path.join(DATA_PATH, "data/data_clean.csv")).iloc[:, 1:]
 
     # Perform the transformations (it is possible to skip one by leaving
     # it out, but conflicts might result, requiring manual maintenance)

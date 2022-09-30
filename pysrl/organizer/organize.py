@@ -1,4 +1,4 @@
-"""Organizer for the raw_data before analysis (clustering, classification, ...)"""
+"""Organizer for the data before analysis (clustering, classification, ...)"""
 
 from ..config.helper import load_input, save_data
 from .orga_fcts import *
@@ -8,7 +8,7 @@ def do_orga(formats=('csv', )):
     """Do orga function to be called from main or directly
 
     Args:
-        formats (tuple): The formats to save resulting raw_data to (csv and/or xlsx)
+        formats (tuple): The formats to save resulting data to (csv and/or xlsx)
 
     """
     print("Organize data_complete by mapping with learn_pages.yaml")
@@ -16,7 +16,7 @@ def do_orga(formats=('csv', )):
     # Load learn_pages overview and data_file:
     learn_pages = load_learn_pages()
     required_columns = ['Link', 'Date/Time', 'User']
-    data_df = load_input('../../input/data_complete.csv', columns=required_columns)
+    data_df = load_input('data_complete.csv', columns=required_columns)
 
     # Map the links of the loaded raw_data to the attributes of the learn-pages:
     mapped_links = []
