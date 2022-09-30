@@ -6,6 +6,9 @@ from .helper import get_root
 
 ROOT = get_root()
 INPUT_PATH = path.join(ROOT, 'input')
-DATA_PATH = path.join(ROOT, 'raw_data')
+DATA_PATH = path.join(ROOT, 'data')
 RESULTS_PATH = path.join(ROOT, 'results')
 RECENT_RESULTS_PATH = path.join(ROOT, 'results', 'recent')
+
+LEARN_TYPES = ['Tests', 'Ü_Info', 'Übungen', 'Kurzaufgaben', 'BK_Info',
+               'Beispiele', 'Übersicht']

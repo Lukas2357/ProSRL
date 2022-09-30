@@ -33,10 +33,10 @@ def load_data(filename: str) -> pd.DataFrame:
         pd.DataFrame: Dataframe of all file raw_data
 
     """
-    data_file = os.path.join(get_root(), "raw_data", filename)
+    data_file = os.path.join(get_root(), "data", filename)
     data_df = pd.read_csv(data_file)
 
-    return data_df
+    return data_df.iloc[:, 1:]
 
 
 def load_input(filename: str, columns=None) -> pd.DataFrame:
@@ -114,7 +114,7 @@ def get_root() -> str:
 
     """
 
-    m = "Could not specify ROOT. Go to pysrl/pysrl/config, open root.txt, enter" \
+    m = "Could not specify ROOT. Go to /pysrl/config, open root.txt, enter" \
         " the path of the desired root folder in the first line, save and " \
         "rerun. Alternatively run main.py to specify its location as ROOT."
 
