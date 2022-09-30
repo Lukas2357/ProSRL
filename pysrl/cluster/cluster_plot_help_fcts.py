@@ -1,11 +1,12 @@
 """Helper functions for the cluster_plot_fcts.py module"""
-
+import difflib
 import os
 from matplotlib.axes import Axes
 import pandas as pd
 from matplotlib import pyplot as plt
 
 from ..config.constants import RECENT_RESULTS_PATH
+from ..preparer.prep_fcts import load_transformed_data
 
 
 def init_subplots_plot(n_plots: int, scales=(3.5, 3.2)) -> list:
@@ -111,21 +112,27 @@ def save_figure(save: bool, dpi: int, path: str, fig=None, tight=True,
     
     """
     if save:
+
+        path = path + '.' + fig_format
+
         os.makedirs(os.path.dirname(path), exist_ok=True)
         os.makedirs(RECENT_RESULTS_PATH, exist_ok=True)
+
         if tight:
             plt.tight_layout()
         if fig is None:
             plt.savefig(path, dpi=dpi, format=fig_format)
             if recent:
-                path = os.path.join(RECENT_RESULTS_PATH, os.path.split(path)[-1])
+                path = os.path.join(RECENT_RESULTS_PATH,
+                                    os.path.split(path)[-1])
                 plt.savefig(path, dpi=dpi, format=fig_format)
         else:
             fig.patch.set_facecolor('white')
             plt.savefig(path, dpi=dpi, facecolor=fig.get_facecolor(),
                         format=fig_format)
             if recent:
-                path = os.path.join(RECENT_RESULTS_PATH, os.path.split(path)[-1])
+                path = os.path.join(RECENT_RESULTS_PATH,
+                                    os.path.split(path)[-1])
                 plt.savefig(path, dpi=dpi, facecolor=fig.get_facecolor(),
                             format=fig_format)
 
@@ -145,3 +152,98 @@ def get_centers_list(centers: pd.DataFrame):
                    for combi in set([combi[0]
                                      for combi in centers.columns])]
     return centers_dfs
+
+
+def get_user_learntype_strings(exclude="G", replace=None) -> dict:
+    """Transform the learntype column for each user in a string
+
+    Args:
+        exclude (string): LearnTypes to exclude (by letter, see below)
+        replace (dict): Letters to replace (possible letters see below)
+
+    Returns:
+        dict: key=User, value=String of LearnTypes
+
+    """
+    if replace is None:
+        replace = {'I': 'U', 'J': 'B'}
+
+    df = load_transformed_data()[["User", "LearnType"]]
+
+    learn_type_labels = ["T", "I", "U", "K", "J", "B", "G"]
+    df["LearnType"] = df["LearnType"].map(
+        dict(zip(range(7), learn_type_labels))
+    )
+
+    user_strings = {}
+
+    for user in df.User.unique():
+
+        temp = "".join(df.loc[df.User == user, "LearnType"])
+        temp = "".join([x for x in temp if x not in exclude])
+
+        for key, value in replace.items():
+            temp = temp.replace(key, value)
+
+        user_strings[user] = temp
+
+    return user_strings
+
+
+def get_learntype_string_ratios(user_strings=None, pad='max', exclude="G",
+                                replace=None) -> pd.DataFrame:
+    """Get similarity ratios for user LearnType strings
+
+    Args:
+        user_strings (dict): Strings as returned by get_user_learntype_strings
+        pad (string): Min for cutting, max for broadcasting, None for keeping
+        exclude (string): exclude parameter passed to get_user_learntype_strings
+        replace (dict): replace parameter passed to get_user_learntype_strings
+
+    Returns:
+        pd.DataFrame: columns -> user1, user2, string1, string2, sim_ratio
+
+    """
+
+    if user_strings is None:
+        user_strings = get_user_learntype_strings(exclude, replace)
+
+    df = pd.DataFrame(
+        columns=("user1", "user2", "string1", "string2", "sim_ratio")
+    )
+
+    for user1, string1 in user_strings.items():
+
+        for user2, string2 in user_strings.items():
+
+            min_length = min(len(string1), len(string2))
+            max_length = max(len(string1), len(string2))
+
+            if min_length == 0:
+                ratio = 0
+
+            elif user1 == user2:
+                ratio = 0.5
+
+            else:
+                if pad == "min":
+                    s1, s2 = string1[:min_length], string2[:min_length]
+                elif pad == "max":
+                    s1 = (string1 * (int(max_length / min_length) + 1))[
+                         :max_length
+                         ]
+                    s2 = (string2 * (int(max_length / min_length) + 1))[
+                         :max_length
+                         ]
+                else:
+                    s1, s2 = string1, string2
+
+                ratio = difflib.SequenceMatcher(None, s1, s2).ratio()
+
+            idx = 0 if len(df.index) == 0 else max(df.index) + 1
+
+            df.loc[idx] = user1, user2, string1, string2, ratio
+
+        df = df.sort_values(by="sim_ratio", ascending=False)
+
+    return df

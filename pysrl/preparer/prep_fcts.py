@@ -18,7 +18,7 @@ def load_transformed_data():
         pd.DataFrame: The loaded raw_data as pandas dataframe
 
     """
-    return pd.read_csv(path.join(DATA_PATH, "../../data/data_trafo.csv")).iloc[:, 1:]
+    return pd.read_csv(path.join(DATA_PATH, "data_trafo.csv")).iloc[:, 1:]
 
 
 def make_dummies(df: pd.DataFrame) -> pd.DataFrame:

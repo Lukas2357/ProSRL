@@ -108,10 +108,10 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
             marker_styles = [['v', '>', '^', 'o'][m] for m in diffs]
             sizes = sorted([10 * np.sqrt(x)
                             for x in user_df['SecSpent'].unique()])
-            
+
             sns.lineplot(ax=c_ax, data=user_df, x='CumMin', y='LearnType',
                          linestyle='-', color='gray', zorder=-1)
-            
+
             sns.scatterplot(ax=c_ax, data=user_df, x='CumMin', y='LearnType',
                             markers=marker_styles, sizes=sizes, hue='Category',
                             palette='tab10', linewidth=0.7, edgecolor='k',
@@ -129,15 +129,15 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
                 else:
                     text = ''
 
-                ult = user_df['LearnType']
+                lt = user_df['LearnType']
                 if i == 0 or i == len(user_df.index):
                     off = 1
-                elif (ult[i-1] == ult[i]+1 or ult[i+1] == ult[i]+1) and \
-                     (ult[i-1] != ult[i]-1 and ult[i+1] != ult[i]-1):
+                elif (lt[i - 1] == lt[i] + 1 or lt[i + 1] == lt[i] + 1) and \
+                        (lt[i - 1] != lt[i] - 1 and lt[i + 1] != lt[i] - 1):
                     off = - 1
                 else:
                     off = 1
-                pos = [user_df['CumMin'][i], ult[i] + off]
+                pos = [user_df['CumMin'][i], lt[i] + off]
                 c_ax.annotate(text, pos, horizontalalignment='center',
                               verticalalignment='center', size=10)
 
@@ -348,7 +348,7 @@ def get_axvline_params(user_df: pd.DataFrame, day_breaks: pd.DataFrame,
     """
     vcs = ['black', 'red']
     axvline_params = []
-    
+
     for i, break_type in enumerate((day_breaks, hour_breaks)):
         for _, br in break_type.iterrows():
             for d in [1.85, 2.15]:

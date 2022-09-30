@@ -1,6 +1,8 @@
 """Functions for the cluster_plot.py module"""
 
 import warnings
+
+import numpy as np
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
@@ -18,7 +20,7 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=300,
 
     Args:
         features (list): The features to which all correlations are shown
-        df (any): The raw_data to plot, if None it will be loaded from raw_data prep
+        df (any): The data to plot, if None it will be loaded from raw_data prep
         save (bool): Whether to save the plot
         dpi (int): Dots per inch to save the plot
         filename (str): The filename to save the plot
@@ -58,7 +60,7 @@ def user_heatmap(user=None, features=None, df=None, save=False, dpi=300,
     Args:
         user (list): The users to show
         features (list): The features to show
-        df (any): The raw_data to plot, if None it will be loaded from raw_data prep
+        df (any): The data to plot, if None it will be loaded from data prep
         save (bool): Whether to save the plot
         dpi (int): Dots per inch to save the plot
         filename (str): The filename to save the plot
@@ -120,7 +122,8 @@ def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
         show_cluster_of (list): Feature combi whose clusters shown in all plots
 
     """
-    ax = init_subplots_plot(len(pairs))
+    ax, label = init_subplots_plot(len(pairs)), ''
+
     if show_cluster_of is not None:
         label = get_color_label(show_cluster_of, labels)
 
@@ -130,6 +133,7 @@ def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
 
         x_data, y_data = data.iloc[:, 0], data.iloc[:, 1]
         x_tag, y_tag = data.columns[0], data.columns[1]
+
         if show_cluster_of is None or len(label) == 0:
             if (x_tag, y_tag) in labels.columns:
                 c_label = [i + 1 for i in labels[(x_tag, y_tag)]]
@@ -137,11 +141,14 @@ def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
                 c_label = [i + 1 for i in labels.iloc[:, 0]]
         else:
             c_label = label
+
         legend = True if idx == 0 else False
+
         sns.scatterplot(x=x_data, y=y_data, ax=c_ax, hue=c_label,
                         palette="tab10", legend=legend, s=60)
 
         user_ids = data.index if user_ids is None else user_ids
+
         for i, j in enumerate(user_ids):
             c_ax.annotate(str(j), [list(x_data)[i], list(y_data)[i]],
                           horizontalalignment='center',
@@ -161,8 +168,7 @@ def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
 
 
 def cluster_single_plot(columns: list[pd.DataFrame], labels: pd.DataFrame,
-                        save=True, path="", dpi=300, n_bins=20,
-                        show_cluster_of=None) -> list:
+                        save=True, path="", dpi=300, n_bins=20) -> list:
     """Plot the kmeans clustering result for single features
 
     Args:
@@ -172,7 +178,6 @@ def cluster_single_plot(columns: list[pd.DataFrame], labels: pd.DataFrame,
         path (string): Path to save the figure
         dpi (int): Dots per inch for saving the figure
         n_bins (int): Number of bins to show in histogram
-        show_cluster_of (list): Feature combi whose clusters shown in all plots
         
     Returns:
         list: List of axes of the plots
@@ -260,3 +265,43 @@ def get_color_label(show_cluster_of: list, labels: pd.DataFrame) -> list:
         warnings.warn(warn_m)
 
     return label
+
+
+def string_ratio_grid(ratios_df=None, clustermap=True, pad='max', exclude='G',
+                      replace=None, save=False, dpi=300) -> np.array:
+    """Get a grid for string ratios and possibly plot it as clustermap
+
+    Args:
+        ratios_df (pd.DataFrame): Df as returned by get_learntype_string_ratios
+        clustermap (bool): Whether to plot the clustermap
+        pad (str) pad parameter passed to get_learntype_string_ratios
+        exclude (str): exclude parameter passed to get_learntype_string_ratios
+        replace (dict): replace parameter passed to get_learntype_string_ratios
+        save (bool): Whether to save the clustermap
+        dpi (int): Dpi of the clustermap
+
+    Returns:
+        np.array: The grid of user vs user similarity ratios
+
+    """
+
+    if ratios_df is None:
+        ratios_df = get_learntype_string_ratios(pad=pad, exclude=exclude,
+                                                replace=replace)
+
+    max_user = max(ratios_df.user1)
+    grid = np.zeros([max_user + 1, max_user + 1])
+
+    for idx in ratios_df.index:
+        row = ratios_df.loc[idx]
+        grid[row.user1, row.user2] = row.sim_ratio
+
+    if clustermap:
+        sns.clustermap(
+            pd.DataFrame(grid), xticklabels=True, yticklabels=True
+        ).ax_col_dendrogram.set_title("Similarity of User LearnType Strings")
+
+        path = os.path.join(RESULTS_PATH, 'heatmaps', 'string_similarities')
+        save_figure(save=save, path=path, dpi=dpi, fig_format='jpg')
+
+    return grid

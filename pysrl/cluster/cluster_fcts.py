@@ -24,7 +24,7 @@ def load_prep_data():
         pd.DataFrame: The loaded raw_data as pandas dataframe
 
     """
-    return load_data('../../data/data_prep.csv').iloc[:, 1:]
+    return load_data('data_prep.csv').iloc[:, 1:]
 
 
 def generic_clustering(df: pd.DataFrame, features: list, n_cluster=3, dim=2,
