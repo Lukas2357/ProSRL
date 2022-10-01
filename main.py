@@ -22,8 +22,6 @@ an.excluded_user = []  # [15, 25, 31, 44]
 
 an.features = ['Tests', 'Übungen', 'Kurzaufgaben', 'Beispiele',
                'TT', 'TB', 'UT', 'UU', 'UB', 'KK', 'KB', 'BU', 'BK', 'BB']
-               #'TTT', 'TTB', 'TBB', 'UTT', 'UUU', 'KKK', 'KKB', 'KBK', 'KBB',
-               #'BUU', 'BKK', 'BKB', 'BBU', 'BBK', 'BBB']
 an.predict = 'AV'
 an.algorithm = 'k_means'
 an.scaler = 'Standard'

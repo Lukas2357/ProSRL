@@ -1,6 +1,7 @@
 """Functions for the cluster_plot.py module"""
-
+import random
 import warnings
+from typing import Tuple
 
 import numpy as np
 from scipy import stats
@@ -480,9 +481,8 @@ def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
     return fig, features
 
 
-def get_success_moderators(diff='RF_Diff', splits=2, save=False,
+def get_success_moderators(diff='RF_Diff', splits=2, save=False, plot=True,
                            sort_col='meanchange', drop_fits=True):
-
     df = load_data('data_prep_with_personal.csv')
     obsolete = 'NSt_Diff' if diff == 'RF_Diff' else 'RF_Diff'
     df = df.drop(['User', obsolete], axis=1)
@@ -535,7 +535,87 @@ def get_success_moderators(diff='RF_Diff', splits=2, save=False,
     numeric = numeric.rename(columns={'index': 'Feature'})
     df = moderators.copy().reset_index().rename(columns={'index': 'Feature'})
 
-    plot_significant_corrs(numeric, df, save=save, filename=diff+'_moderators',
-                           title='Influence of Features on ' + diff)
+    if plot:
+        plot_significant_corrs(numeric, df, save=save,
+                               filename=diff + '_moderators',
+                               title='Influence of Features on ' + diff)
 
     return moderators
+
+
+def simulate_random_influences(reps) -> pd.DataFrame:
+    """Simulate random influences (corr etc.) of features on learn success
+
+    Args:
+        reps (int): Number of random features to simulate
+
+    Returns:
+        pd.DataFrame: Structure as the one returned by get_success_moderators
+
+    """
+    diff = load_data('data_prep_with_personal.csv')['RF_Diff']
+    idx = diff.index
+    std = diff.std()
+    n = len(idx)
+
+    random_moderators = {'meanchange': [], 'pears': [], 'spear': []}
+
+    for _ in range(reps):
+        random.shuffle(diff)
+        mean_diff = (np.mean(diff[:n // 2]) - np.mean(diff[n // 2:]))
+        mean_diff_scaled = mean_diff / std * np.sqrt(n // 2) / 2
+        random_moderators['meanchange'].append(mean_diff_scaled)
+        random_moderators['pears'].append(stats.pearsonr(diff, idx)[0])
+        random_moderators['spear'].append(stats.spearmanr(diff, idx)[0])
+
+    return pd.DataFrame(random_moderators)
+
+
+def summarize_feature_influences(moderators, diff='RF_Diff',
+                                 save=False) -> Tuple[plt.Figure, np.ndarray]:
+    """Summarize cor, ... with learn success for features in Histogram + qqPlot
+
+    Args:
+        moderators (pd.DataFrame): Df as returned by get_success_moderators
+        diff (string): The type of diff measurement to consider
+        save (boolean): Whether to save the plot
+
+    Returns:
+        Tuple[plt.Figure, np.ndarray]: The figure and axis handle
+
+    """
+    random_mods = simulate_random_influences(len(moderators.index))
+
+    labs = ["success change high/low feature values / std",
+            "Pearson correlation feature vs learn success",
+            "Spearman correlation feature vs learn success"]
+
+    fig, ax = plt.subplots(3, 3, figsize=(10, 9), dpi=200)
+
+    for idx, col in enumerate(['meanchange', 'pears', 'spear']):
+
+        sns.histplot(data=moderators, x=col, bins=30, ax=ax[idx, 0])
+        ax[idx, 0].set(xlabel=labs[idx])
+
+        stats.probplot(moderators[col] / np.std(moderators[col]),
+                       dist="norm", plot=ax[idx, 1], fit=False)
+
+        stats.probplot(random_mods[col] / np.std(random_mods[col]),
+                       dist="norm", plot=ax[idx, 2], fit=False)
+
+        legend = ['real features', 'random features']
+        for i in [1, 2]:
+            ax[idx, i].set(title='')
+            ax[idx, i].get_lines()[0].set_marker('.')
+            ax[idx, i].get_lines()[0].set_markeredgecolor('k')
+            ax[idx, i].get_lines()[0].set_markersize(5)
+            ax[idx, i].plot([-3, 3], [-3, 3], 'r')
+            ax[idx, i].legend([legend[i - 1]])
+
+    plt.suptitle('Distribution of Feature influences on Learn success')
+    plt.tight_layout()
+
+    path = os.path.join(RESULTS_PATH, 'summary', f'summary_{diff}_influences')
+    save_figure(save=save, dpi=200, fig_format='jpg', path=path)
+
+    return fig, ax
