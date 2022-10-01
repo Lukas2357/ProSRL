@@ -41,32 +41,23 @@ def make_dummies(df: pd.DataFrame) -> pd.DataFrame:
     return df_dummy.drop(["Level"], axis=1)
 
 
-def get_column_types() -> dict:
-    """Get a dictionary to indicate for each column to which kind from learn,
-        info, type, category, level or normalized it belongs.
+def get_feature_groups() -> dict:
+    """Manually defined feature groups to access via group name
+       Call this function to get a dict with grouped features for bulk access
 
     Returns:
          dict: The dictionary of column types
 
     """
-
     c = {'learn': ['Tests', 'Übungen', 'Kurzaufgaben', 'Beispiele'],
          'info': ['BK_Info', 'Ü_Info'],
-         'learn2': ['Tests', 'Übungen', 'Kurzaufgaben'],
-         'info2': ['BK_Info', 'Ü_Info', 'Beispiele'],
          'cat': [f'Cat_{i}' for i in range(6)],
          'level': ['Grund', 'Erweitert'],
          'freq': ['fMean', 'f1', 'f12', 'f1Amp', 'f12Amp'],
-         'per_act': ['Learn_TimePerAct', 'Info_TimePerAct', 'Tot_TimePerAct'],
-         'per_act2': ['Learn2_TimePerAct', 'Info2_TimePerAct'],
-         'time': ['Learn', 'Info', 'Tot',
-                  'LearnPerc', 'InfoPerc'],
-         'time2': ['Learn2', 'Info2', 'Learn2Perc',
-                   'Info2Perc'],
+         'per_act': ['Learn_tpa', 'Info_tpa', 'Tot_tpa'],
+         'time': ['Learn', 'Info', 'Tot', 'LearnPerc', 'InfoPerc'],
          'acts': ['LearnActs', 'InfoActs', 'TotActs', 'LearnActsPerc',
                   'InfoActsPerc'],
-         'acts2': ['Learn2Acts', 'Info2Acts', 'Learn2ActsPerc',
-                   'Info2ActsPerc'],
          'long_short': ['ShortLearnActsPerc', 'LongLearnActsPerc',
                         'ShortInfoActsPerc', 'LongInfoActsPerc',
                         'LongActsPerc', 'ShortActsPerc'],
@@ -85,7 +76,8 @@ def get_column_types() -> dict:
          'rasch_rf': ['RF_Pre', 'RF_Post', 'RF_Diff'],
          'person': ['SWJK', 'Note', 'SWK', 'FSK', 'AV', 'ALZO', 'VLZO', 'LZO',
                     'Inte', 'KLO', 'KLW', 'MKL', 'RZM', 'RSA', 'RAK'],
-         'fool': ['backfrac', 'foolfrac1', 'foolfrac2', 'foolfrac12']}
+         'fool': ['backfrac', 'foolfrac1', 'foolfrac2', 'foolfrac12']
+         }
 
     agg_norm = add_agg_columns(get_labels_only=True)
     c = c | {'type': c['learn'] + c['info']}
@@ -129,14 +121,10 @@ def add_act_time_columns(df: pd.DataFrame, column_types: dict) -> pd.DataFrame:
     times = df.mul(df['SecSpent'], axis=0)
 
     learn_cols = df[column_types['learn']]
-    learn_cols_no_b = learn_cols.drop(["Beispiele"], axis=1)
     learnings = learn_cols.sum(axis=1)
-    learnings_no_b = learn_cols_no_b.sum(axis=1)
 
     info_cols = df[column_types['info']]
-    info_cols_with_b = pd.concat([learn_cols, df["Beispiele"]], axis=1)
     infos = info_cols.sum(axis=1)
-    infos_with_b = info_cols_with_b.sum(axis=1)
 
     overviews = df[['Übersicht']].sum(axis=1)
 
@@ -146,19 +134,15 @@ def add_act_time_columns(df: pd.DataFrame, column_types: dict) -> pd.DataFrame:
         if c not in drops:
             cols[idx] = c + "Acts"
     df.columns = cols
-    type_time_cols = [c + "Acts" for c in get_column_types()['type']]
+    type_time_cols = [c + "Acts" for c in get_feature_groups()['type']]
     df = pd.concat([df[drops], df[type_time_cols], times], axis=1)
 
     df["LearnActs"] = learnings
     df["InfoActs"] = infos
-    df["Learn2Acts"] = learnings_no_b
-    df["Info2Acts"] = infos_with_b
 
     df["TotActs"] = df["LearnActs"] + df["InfoActs"] + overviews
     df["Learn"] = times[column_types['learn']].sum(axis=1)
     df["Info"] = times[column_types['info']].sum(axis=1)
-    df["Learn2"] = times[column_types['learn2']].sum(axis=1)
-    df["Info2"] = times[column_types['info2']].sum(axis=1)
     overview_time = times[['Übersicht']].sum(axis=1)
     df["Tot"] = overview_time + df["Learn"] + df["Info"]
 
@@ -208,12 +192,12 @@ def scale_features(df: pd.DataFrame, column_types: dict) -> pd.DataFrame:
     time_cols = [c for c in df.columns if 'Time' in c] + ['fMean']
     df[time_cols] = df[time_cols] / 60
 
-    perc_time_cols = ['Learn', 'Info', 'Learn2', 'Info2']
+    perc_time_cols = ['Learn', 'Info']
     df = add_divided_columns(df, perc_time_cols, 'Tot', perc=True)
 
-    perc_act_cols = ['LearnActs', 'InfoActs', 'Learn2Acts', 'Info2Acts',
-                     'duplicates', 'ShortLearnActs', 'ShortInfoActs',
-                     'LongLearnActs', 'LongInfoActs', 'ShortActs', 'LongActs']
+    perc_act_cols = ['LearnActs', 'InfoActs', 'duplicates', 'ShortLearnActs',
+                     'ShortInfoActs', 'LongLearnActs', 'LongInfoActs',
+                     'ShortActs', 'LongActs']
 
     df = add_divided_columns(df, perc_act_cols, 'TotActs', perc=True)
 
@@ -281,7 +265,7 @@ def add_agg_columns(df=pd.DataFrame(), get_labels_only=False) -> any:
     for label, combi in zip(labels, combis):
         df[label] = df[[c for c in combi]].sum(axis=1)
         if label not in ['ShortActs', 'LongActs']:
-            df[label+"Acts"] = df[[c+"Acts" for c in combi]].sum(axis=1)
+            df[label + "Acts"] = df[[c + "Acts" for c in combi]].sum(axis=1)
 
     print()
     return df
@@ -311,7 +295,8 @@ def add_additional_features(df: pd.DataFrame, sum_df: pd.DataFrame,
     sum_df = add_divided_columns(sum_df, cols, div_cols)
 
     sum_df['duplicates'] = get_duplicates(df)
-    sum_df['nCat'] = sum_df[get_column_types()['cat']].astype(bool).sum(axis=1)
+    cat_columns = sum_df[get_feature_groups()['cat']]
+    sum_df['nCat'] = cat_columns.astype(bool).sum(axis=1)
     sum_df['LearnTypeEntropy'] = get_type_entropy(sum_df, f_type='learntype')
     sum_df['CategoryEntropy'] = get_type_entropy(sum_df, f_type='cat')
     sum_df['DidTest'] = sum_df['Tests'].astype(bool).astype(int)
@@ -325,7 +310,8 @@ def add_additional_features(df: pd.DataFrame, sum_df: pd.DataFrame,
                    get_before_after_test_times(user_dfs),
                    get_time_dependent_features(user_dfs),
                    get_mean_features(user_dfs),
-                   get_fool_features(user_dfs)]
+                   get_fool_features(user_dfs),
+                   get_switch_features()]
 
     all_f = [sum_df.drop(['Category', 'ResponsTask', 'TestResQual',
                           'TestResQuant', 'difficulty'], axis=1)] + add_feature
@@ -377,7 +363,7 @@ def get_entropy_features(user_dfs: list, feature='LearnType',
     """
     mapper = dict(zip(range(len(mapper)), mapper))
     result = pd.DataFrame()
-    for distance in range(1, max_n_cond_entropy+1):
+    for distance in range(1, max_n_cond_entropy + 1):
         entropy = []
         for user_df in user_dfs:
             user_arr = user_df[feature].map(mapper)

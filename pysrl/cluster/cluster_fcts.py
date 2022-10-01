@@ -17,14 +17,18 @@ from ..preparer.prep_plot_fcts import plot_pca, \
     learn_types_lineplots
 
 
-def load_prep_data():
+def load_prep_data(rm_first_col=True):
     """Loads the prepared raw_data from csv file
 
     Returns:
         pd.DataFrame: The loaded raw_data as pandas dataframe
 
     """
-    return load_data('data_prep.csv').iloc[:, 1:]
+    if rm_first_col:
+        return load_data('data_prep.csv').iloc[:, 1:]
+
+    else:
+        return load_data('data_prep.csv')
 
 
 def generic_clustering(df: pd.DataFrame, features: list, n_cluster=3, dim=2,
@@ -74,6 +78,7 @@ def generic_clustering(df: pd.DataFrame, features: list, n_cluster=3, dim=2,
         model.fit(data)
 
         result['labels'][tag] = model.labels_
+        result['labels'] = result['labels'].copy()
 
         if alg == 'k_means':
             center = model.cluster_centers_

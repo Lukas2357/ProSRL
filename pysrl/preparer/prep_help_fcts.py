@@ -8,7 +8,8 @@ import pandas as pd
 import regex as re
 from numpy.typing import ArrayLike
 
-from ..cluster.cluster_plot_help_fcts import save_figure
+from ..cluster.cluster_plot_help_fcts import save_figure, \
+    get_user_learntype_strings
 from ..organizer.orga_fcts import load_learn_pages
 
 
@@ -577,7 +578,7 @@ def add_divided_columns(df, cols, div_col, perc=False, postfix='PerX'):
         if perc:
             postfix = 'Perc'
         elif 'Acts' in div_col:
-            postfix = '_TimePerAct'
+            postfix = '_tpa'
     elif postfix == '':
         df = df.drop(cols, axis=1)
 
@@ -623,6 +624,46 @@ def get_fool_features(user_dfs: list, plot=False) -> pd.DataFrame:
     features.index = range(len(features))
 
     return features
+
+
+def get_switch_features(exclude='G', replace=None,
+                        threshold=0.01) -> pd.DataFrame:
+    """Get features for user switches between learntypes
+
+    Args:
+        exclude (str): LearnTypes to exclude (see learntype list below)
+        replace (str): LearnTypes to replace with others
+        threshold (float): Mean fraction of a switch on all switches for all
+                           users above which a switch feature is kept.
+    Returns:
+        pd.DataFrame: The df of new features for each user
+
+    """
+    if replace is None:
+        replace = {'I': 'U', 'J': 'B'}
+
+    strings = get_user_learntype_strings(exclude=exclude, replace=replace)
+
+    labels = ['T', 'I', 'U', 'K', 'J', 'B', 'G']
+    labels = [x for x in labels if x not in exclude and x not in replace.keys()]
+
+    combis = []
+    for steps in range(2, 4):
+        combis.append([''.join(x) for x in product(*[labels] * steps)])
+
+    result = {}
+
+    for combix in combis:
+        for combi in combix:
+            result[combi] = [
+                len(re.findall(combi, string, overlapped=True))
+                / (len(string) - len(combi) + 1)
+                for string in strings.values()
+            ]
+
+    result = pd.DataFrame(result)
+
+    return result.drop(result.columns[result.mean() < threshold], axis=1)
 
 
 def get_type_idx(pages: dict) -> list:

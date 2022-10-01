@@ -3,6 +3,7 @@
 import warnings
 
 import numpy as np
+from scipy import stats
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
@@ -113,17 +114,19 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
                     threshold, min_cor)
             df, numeric = get_significant_correlations(*args)
 
-            if len(df.index) > 0 and plot_significant:
+            numeric = numeric.drop(['Prio 1', 'Prio 2'], axis=1)
+            df = df.drop(['Prio 1', 'Prio 2'], axis=1)
 
+            if len(df.index) > 0 and plot_significant:
                 fig = plot_significant_corrs(numeric, df, dpi, save, path,
-                                             filename)
+                                             filename + '_sgnf')
                 figures.append(fig)
 
     plt.show()
     return figures, df
 
 
-def user_heatmap(user=None, features=None, df=None, save=False, dpi=300, 
+def user_heatmap(user=None, features=None, df=None, save=False, dpi=300,
                  filename='user_heatmap', cbar=False):
     """Heatmap of all features for given set of users
 
@@ -139,40 +142,40 @@ def user_heatmap(user=None, features=None, df=None, save=False, dpi=300,
     """
     if isinstance(user, int):
         user = [user]
-        
+
     if isinstance(features, int):
         features = [features]
-        
+
     if df is None:
         df = load_prep_data()
-        
+
     scaled_df = df.drop(['User'], axis=1)
     scaled_df = StandardScaler().fit_transform(scaled_df)
     scaled_df = pd.DataFrame(scaled_df, columns=df.columns[1:])
-    
+
     if user is not None:
         df = df[df['User'].isin(user)]
         scaled_df = scaled_df[df['User'].isin(user)]
-        
+
     if features is not None:
         df = df[features]
         scaled_df = scaled_df[features]
     else:
         df = df.drop(['User'], axis=1)
-    
+
     if len(df.columns) > len(df.index):
         df = df.transpose()
         scaled_df = scaled_df.transpose()
-    
+
     rows = max(len(df.columns), len(df.index))
     cols = min(len(df.columns), len(df.index))
-    fig = plt.figure(figsize=(cols, rows/4+2))
+    fig = plt.figure(figsize=(cols, rows / 4 + 2))
     sns.heatmap(scaled_df, annot=df, fmt='.3f', vmin=-3, vmax=3, cbar=cbar)
     plt.suptitle('User feature heatmap', fontweight='bold')
-    
+
     path = os.path.join(RESULTS_PATH, 'heatmaps', filename)
     save_figure(save, dpi, path, fig)
-    
+
     plt.show()
 
 
@@ -266,11 +269,11 @@ def cluster_single_plot(columns: list[pd.DataFrame], labels: pd.DataFrame,
         if len(data[tag].unique()) < 10:
             data['count'] = 1
             data = data.groupby([tag, 'label']).count().reset_index()
-            sns.barplot(ax=c_ax, data=data, x=tag, y='count', hue='label', 
+            sns.barplot(ax=c_ax, data=data, x=tag, y='count', hue='label',
                         palette="tab10")
         else:
-            sns.histplot(ax=c_ax, data=data, x=tag, hue='label', 
-                         multiple='stack', bins=n_bins, palette="tab10", 
+            sns.histplot(ax=c_ax, data=data, x=tag, hue='label',
+                         multiple='stack', bins=n_bins, palette="tab10",
                          legend=legend)
         c_ax.set_title(f"{tag}", fontweight='semibold')
         c_ax.set_ylabel("occurrences")
@@ -308,7 +311,7 @@ def plot_kmeans_centers(centers: pd.DataFrame, centers_inv: pd.DataFrame,
         df.columns = [c[1] for c in df.columns]
         sns.heatmap(df, ax=c_ax_0, annot=centers_inv_dfs[idx], fmt='.2f',
                     cbar=False)
-        
+
     plt.suptitle('Cluster centers of kMeans', fontweight='bold')
     plt.tight_layout()
     save_figure(save, dpi, os.path.join(path, "center"))
@@ -377,7 +380,9 @@ def string_ratio_grid(ratios_df=None, clustermap=True, pad='max', exclude='G',
     return grid
 
 
-def plot_significant_corrs(numeric, df, dpi, save, path, filename):
+def plot_significant_corrs(numeric, df, dpi=300, save=False,
+                           path=None, filename='cor_heatmap',
+                           title='Significant correlations'):
     """Plot the significant correlations as a heatmap
 
     Args:
@@ -387,12 +392,11 @@ def plot_significant_corrs(numeric, df, dpi, save, path, filename):
         save (bool): Whether to save the plot
         path (str): Path to save the plots
         filename (str): Name of the file to save
+        title (str): The title of the plot
 
     """
     cmap1 = sns.diverging_palette(133, 10, as_cmap=True)
     cmap2 = sns.diverging_palette(220, 50, as_cmap=True)
-    numeric = numeric.drop(['Prio 1', 'Prio 2'], axis=1)
-    df = df.drop(['Prio 1', 'Prio 2'], axis=1)
 
     fig = plt.figure(figsize=(12, len(numeric) // 4 + 2), dpi=dpi)
 
@@ -400,23 +404,28 @@ def plot_significant_corrs(numeric, df, dpi, save, path, filename):
         mask = numeric.copy()
         for col_m in mask:
             mask[col_m] = col != col_m
-        if col in ['pearson', 'spearman']:
+        if col in ['pearson', 'spearman', 'cor', 'correlation',
+                   'spear', 'pears']:
             sns.heatmap(numeric, annot=True, fmt='.3f', vmin=-1,
                         vmax=1, cbar=False, mask=mask)
         elif 'F' in col:
             sns.heatmap(numeric, annot=df, fmt='', cbar=False,
                         mask=mask, cmap=cmap2, vmin=1, vmax=8)
-        elif 'p-value' in col:
+        elif 'p-value' in col or col in ['spear_p', 'pears_p']:
             sns.heatmap(numeric, annot=True, fmt='.4f', mask=mask,
                         vmin=0, vmax=5, cbar=False, cmap=cmap1)
+        elif 'mean' in col:
+            sns.heatmap(numeric, annot=True, fmt='.2f', mask=mask,
+                        vmin=-3, vmax=3, cbar=False)
 
-    plt.title('Significant correlations', fontweight='bold')
+    plt.title(label=title, fontweight='bold')
+    plt.tick_params(axis='both', which='major', labelbottom=False,
+                    bottom=False, top=False, labeltop=True)
 
     if path is None:
-        spath = os.path.join(RESULTS_PATH, 'heatmaps',
-                             filename + '_sgnf')
+        spath = os.path.join(RESULTS_PATH, 'heatmaps', filename)
     else:
-        spath = os.path.join(path, filename + '_sgnf')
+        spath = os.path.join(path, filename)
 
     save_figure(save, dpi, spath, fig)
 
@@ -469,3 +478,64 @@ def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
                                  **kwargs)
 
     return fig, features
+
+
+def get_success_moderators(diff='RF_Diff', splits=2, save=False,
+                           sort_col='meanchange', drop_fits=True):
+
+    df = load_data('data_prep_with_personal.csv')
+    obsolete = 'NSt_Diff' if diff == 'RF_Diff' else 'RF_Diff'
+    df = df.drop(['User', obsolete], axis=1)
+
+    diff_mean, diff_std = df[diff].mean(), df[diff].std()
+
+    res = {}
+
+    for col in list(df.columns):
+
+        if col == diff:
+            continue
+
+        current_df = df.dropna(subset=[col, diff])
+        current = current_df[col]
+        n = len(current)
+
+        lq = list(current.sort_values())[n // splits]
+        uq = list(current.sort_values())[n - n // splits]
+
+        lb = current_df.loc[current <= lq, diff].mean()
+        ub = current_df.loc[current >= uq, diff].mean()
+        mean_diff = (ub - lb) / diff_std * np.sqrt(n // splits) / 2
+
+        spear = stats.spearmanr(current, current_df[diff])
+        pears = stats.pearsonr(current, current_df[diff])
+
+        res[col] = (mean_diff, *spear, *pears)
+
+    cols = ("meanchange", "spear", "spear_p", "pears", "pears_p")
+    moderators = pd.DataFrame(res.values(), index=res.keys(), columns=cols)
+    moderators = moderators.sort_values(by=sort_col, ascending=False)
+
+    if drop_fits:
+        moderators = moderators.drop([x
+                                      for x in moderators.index if 'Fit' in x])
+
+    prios = load_data('features_categories.csv',
+                      rm_first_col=False).set_index('Feature')
+
+    numeric = moderators.copy().reset_index()
+    feature_prios = []
+    for feature in numeric['index']:
+        if feature in prios.index:
+            feature_prios.append(prios.loc[feature].values[0])
+        else:
+            feature_prios.append(3)
+    numeric['index'] = feature_prios
+
+    numeric = numeric.rename(columns={'index': 'Feature'})
+    df = moderators.copy().reset_index().rename(columns={'index': 'Feature'})
+
+    plot_significant_corrs(numeric, df, save=save, filename=diff+'_moderators',
+                           title='Influence of Features on ' + diff)
+
+    return moderators

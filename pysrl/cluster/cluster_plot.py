@@ -17,8 +17,7 @@ def do_plot(data, result, alg, dim, path, abline, dpi, n_bins, user_ids,
         
     if dim == 1:
         cluster_single_plot(data, result['labels'], n_bins=n_bins,
-                            path=path, dpi=dpi,
-                            show_cluster_of=show_cluster_of, save=save)
+                            path=path, dpi=dpi, save=save)
         
     else:
         cluster_pairs_plot(data, result['labels'], abline=abline,

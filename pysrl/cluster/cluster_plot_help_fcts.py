@@ -310,7 +310,8 @@ def get_significant_correlations(method, pearson, p_pearson, spearman,
         for idx, p in enumerate(pvalues[col]):
             row = pvalues.index[idx]
             corr = corrs.loc[col, pvalues.index[idx]]
-            prio1, prio2 = prio.loc[col, 'Prio'], prio.loc[row, 'Prio']
+            prio1 = prio.loc[col, 'Prio'] if col in prio.index else 3
+            prio2 = prio.loc[row, 'Prio'] if row in prio.index else 3
             if p < threshold and min_corr < abs(corr):
                 c_pearson = pearson.loc[col, pvalues.index[idx]]
                 c_spearman = spearman.loc[col, pvalues.index[idx]]

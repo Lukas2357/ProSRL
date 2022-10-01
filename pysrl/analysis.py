@@ -15,7 +15,7 @@ from .organizer.organize import do_orga
 from .preparer.prep_plot_fcts import learn_types_lineplots
 from .transformer.transform import do_trafo
 from .preparer.prepare import do_prep
-from .preparer.prep_fcts import get_column_types
+from .preparer.prep_fcts import get_feature_groups
 
 
 class Analyst:
@@ -47,6 +47,7 @@ class Analyst:
         self.feature_plots = True
         self.user_heatmap = True
         self.cor_heatmap = True
+        self.plot_significant = False
         self.pca_plot = False
         self.user_lineplots = False
         self.classify = False
@@ -106,7 +107,7 @@ class Analyst:
         used_features = []
         for feature in feature_list:
             if feature in self.feature_types:
-                used_features += get_column_types()[feature]
+                used_features += get_feature_groups()[feature]
             else:
                 used_features.append(feature)
 
@@ -203,7 +204,7 @@ class Analyst:
         selected = list(self.performs.values())
         fcts = (do_crawl, do_orga, do_trafo, do_prep, self.analyse)
         args = ([], [self.formats], [self.formats],
-                [self.use_time, self.formats, self.prep_feature,
+                [self.formats, self.prep_feature,
                  self.prep_mapper, self.max_n_cond_entropy], [])
         [fct(*args[i]) for i, fct in enumerate(fcts) if selected[i]]
 
@@ -215,7 +216,7 @@ class Analyst:
     def load_data(self):
         """Load raw_data from load_prep_data or merge_pers_features"""
         self.df = merge_pers_feature(self.rm_incomplete) if self.use_personal \
-            else load_prep_data()
+            else load_prep_data(rm_first_col=False)
         self.df = self.df[~self.df.User.isin(self.excluded_user)]
         return self.df.columns
 
@@ -231,7 +232,7 @@ class Analyst:
         features = self.load_data()
         skipped = [f for f in self.features if f not in features]
         if skipped:
-            warnings.warn(f"Features {skipped} not found in raw_data, skip those!")
+            warnings.warn(f"Features {skipped} not found in data, skip those!")
         self.features = [f for f in self.features if f in features]
         n_features = len(self.features)
         for idx, dim in enumerate(self.n_dim):
@@ -245,7 +246,8 @@ class Analyst:
                          save=self.save_plots, dpi=self._image_dpi)
         if self.cor_heatmap:
             correlation_heatmap(features=self._features, df=self.df,
-                                save=self.save_plots, dpi=self._image_dpi)
+                                save=self.save_plots, dpi=self._image_dpi,
+                                significant=self.plot_significant)
         if self.clustering:
             kwargs = {'n_clusters': self.n_cluster, 'alg': self._algorithm,
                       'scaler': self._scaler, 'plot': self.feature_plots,
