@@ -91,7 +91,7 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
     figures = []
 
     if plot_corr:
-        kwargs = dict(fmt='.3f', vmin=-1, vmax=1, cbar=cbar)
+        kwargs = dict(fmt='.3f', vmin=-1, vmax=1, cbar=cbar, filename=filename)
         fig = heatmap('Feature correlations', correlation, save, **kwargs)
         figures.append(fig)
 
@@ -104,7 +104,8 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
         cmap = sns.diverging_palette(133, 10, as_cmap=True)
 
         if pvalues:
-            kwargs = dict(fmt='.2f', vmin=0, vmax=100, cbar=cbar, cmap=cmap)
+            kwargs = dict(fmt='.2f', vmin=0, vmax=100, cbar=cbar, cmap=cmap,
+                          filename=filename+'_pvalues')
             title = 'Two sided feature correlation p-values / %'
             fig = heatmap(title, p, save, **kwargs)
             figures.append(fig)
