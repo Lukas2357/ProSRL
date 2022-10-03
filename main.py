@@ -13,15 +13,15 @@ an = Analyst()
 # ---- Wahl der Parameter und Einstellungen ------------------------------------
 
 an.performs = {'crawl': 0, 'orga': 0, 'trafo': 0, 'prep': 0, 'analysis': 1}
-an.formats = ('csv',)  # ('csv', 'xlsx') or ('csv', ), latter saves ~50% time
-raw_lineplots = False  # Create and show raw user lineplots before analysis
+an.formats = ('csv', )  # ('csv', 'xlsx') or ('csv', ), latter saves ~50% time
+raw_lineplots = False   # Create and show raw user lineplots before analysis
 
-an.use_personal = False
+an.use_personal = True
 an.rm_incomplete = False
 an.excluded_user = []  # [15, 25, 31, 44]
 
-an.features = ['Tests', 'Übungen', 'Kurzaufgaben', 'Beispiele',
-               'TT', 'TB', 'UT', 'UU', 'UB', 'KK', 'KB', 'BU', 'BK', 'BB']
+an.features = ['backfrac', 'AV', 'NSt_Diff', 'foolfrac12']
+
 an.predict = 'AV'
 an.algorithm = 'k_means'
 an.scaler = 'Standard'
@@ -32,9 +32,8 @@ an.n_dim = 2
 
 an.clustering = True
 an.feature_plots = True
-an.user_heatmap = False
+an.user_heatmap = True
 an.cor_heatmap = True
-an.plot_significant = False
 an.pca_plot = False
 an.user_lineplots = False
 an.elbow = False
