@@ -33,9 +33,9 @@ LearnTimePerc
 InfoTime
 InfoTimePerc
 TotTime
-LearnTimePerAct
-InfoTimePerAct
-TotTimePerAct
+Learntpa
+Infotpa
+Tottpa
 Short_Acts
 LongActs
 ShortInfoActsPerc

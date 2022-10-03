@@ -157,7 +157,7 @@ def save_data(df: pd.DataFrame, filename: str, formats=('csv', 'xlsx')):
 
     """
 
-    data_path = os.path.join(get_root(), "raw_data")
+    data_path = os.path.join(get_root(), "data")
 
     if 'csv' in formats:
         data_file = os.path.join(data_path, filename + '.csv')

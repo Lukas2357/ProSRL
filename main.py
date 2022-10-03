@@ -4,8 +4,10 @@
 # ---- Import Teil zum Bereitstellen von Funktionen ----------------------------
 
 from pysrl.config.helper import set_root
+
 set_root()
 from pysrl.analysis import Analyst
+
 an = Analyst()
 
 # ---- Wahl der Parameter und Einstellungen ------------------------------------
@@ -14,7 +16,7 @@ an.performs = {'crawl': 1, 'orga': 1, 'trafo': 1, 'prep': 1, 'analysis': 1}
 an.formats = ('csv', )  # ('csv', 'xlsx') or ('csv', ), latter saves ~50% time
 raw_lineplots = False   # Create and show raw user lineplots before analysis
 
-an.use_personal = True
+an.use_personal = False
 an.rm_incomplete = False
 an.excluded_user = []  # [15, 25, 31, 44]
 
@@ -25,7 +27,7 @@ an.algorithm = 'k_means'
 an.scaler = 'Standard'
 
 an.image_quality = 'low'
-an.n_cluster = [2]
+an.n_cluster = [1]
 an.n_dim = 2
 
 an.clustering = True
