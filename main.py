@@ -12,11 +12,11 @@ an = Analyst()
 
 # ---- Wahl der Parameter und Einstellungen ------------------------------------
 
-an.performs = {'crawl': 1, 'orga': 1, 'trafo': 1, 'prep': 1, 'analysis': 1}
+an.performs = {'crawl': 0, 'orga': 0, 'trafo': 0, 'prep': 0, 'analysis': 1}
 an.formats = ('csv', )  # ('csv', 'xlsx') or ('csv', ), latter saves ~50% time
 raw_lineplots = False   # Create and show raw user lineplots before analysis
 
-an.use_personal = False
+an.use_personal = True
 an.rm_incomplete = False
 an.excluded_user = []  # [15, 25, 31, 44]
 
@@ -34,11 +34,11 @@ an.clustering = True
 an.feature_plots = True
 an.user_heatmap = True
 an.cor_heatmap = True
-an.pca_plot = True
-an.user_lineplots = True
-an.elbow = True
-an.silhouette = True
-an.classify = True
+an.pca_plot = False
+an.user_lineplots = False
+an.elbow = False
+an.silhouette = False
+an.classify = False
 
 an.learntypes = [[0], [2], [3, 4, 5]]
 an.color_threshold = 2
