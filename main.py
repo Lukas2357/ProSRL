@@ -13,14 +13,15 @@ an = Analyst()
 # ---- Wahl der Parameter und Einstellungen ------------------------------------
 
 an.performs = {'crawl': 0, 'orga': 0, 'trafo': 0, 'prep': 0, 'analysis': 1}
-an.formats = ('csv', )  # ('csv', 'xlsx') or ('csv', ), latter saves ~50% time
-raw_lineplots = False   # Create and show raw user lineplots before analysis
+an.formats = ('csv',)  # ('csv', 'xlsx') or ('csv', ), latter saves ~50% time
+raw_lineplots = False  # Create and show raw user lineplots before analysis
 
 an.use_personal = True
 an.rm_incomplete = False
 an.excluded_user = []  # [15, 25, 31, 44]
 
-an.features = ['backfrac', 'AV', 'NSt_Diff', 'foolfrac12']
+an.features = ['TT', 'TB', 'UT', 'UU', 'UB', 'KK', 'KB', 'BU', 'BK', 'BB',
+               'Beispiele', 'Kurzaufgaben', 'Übungen', 'Tests']
 
 an.predict = 'AV'
 an.algorithm = 'k_means'
@@ -28,7 +29,7 @@ an.scaler = 'Standard'
 
 an.image_quality = 'low'
 an.n_cluster = [1]
-an.n_dim = 2
+an.n_dim = 1
 
 an.clustering = True
 an.feature_plots = True
@@ -43,9 +44,9 @@ an.classify = False
 an.learntypes = [[0], [2], [3, 4, 5]]
 an.color_threshold = 2
 an.n_bins = 20
-an.show_cluster_of = ['Übungen', 'Tests']
+an.show_cluster_of = []
 an.abline = False
-an.clear_recent = True
+an.clear_recent = False
 an.save_plots = True
 
 an.max_depth = 3
