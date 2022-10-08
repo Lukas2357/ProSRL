@@ -102,3 +102,11 @@ pdoc -o ./docs -d google pysrl !pysrl.MODUL_DAS_IGNORIERT_WERDEN_SOLL
 ```
 
 Jetzt kann es mit der Installation wie oben beschrieben weitergehen.
+
+
+## Disclaimer
+
+Das pysrl package und alle seine Funktionen sind weder cross-plattform getestet, noch existieren umfängliche Unit-Tests. \
+Einwandfreie Funktionalität ist daher keinesfalls garantiert, manuelle Anpassung können erforderlich sein.
+
+Bei jeder Art von Problemen gerne an hunold.prof@gmail.com wenden.
