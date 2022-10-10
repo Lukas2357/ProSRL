@@ -1,11 +1,13 @@
-# ++++++++++++++        ProSRL Datenanalyse (PySRL)          V1.3.2 +++++++++++
+# ++++++++++++++        ProSRL Datenanalyse (PySRL)          V1.3.6 +++++++++++
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ---- Import Teil zum Bereitstellen von Funktionen ----------------------------
 
-from pysrl.analysis import Analyst
 from pysrl.config.helper import set_root
+
 set_root()
+from pysrl.analysis import Analyst
+
 an = Analyst()
 
 # ---- Übersicht der Auswahlmöglichkeiten --------------------------------------
@@ -33,7 +35,8 @@ an = Analyst()
 # 'duplicatesPerc', 'nCat', 'TimePerCat', 'DidTest',
 # 'NSt_Pre', 'NSt_Post', 'NSt_Diff', 'RF_Pre', 'RF_Post', 'RF_Diff',
 # 'SWJK', 'Note', 'SWK', 'FSK', 'AV', 'ALZO', 'VLZO', 'LZO', 'Inte',
-# 'KLO', 'KLW', 'MKL', 'RZM', 'RSA', 'RAK']
+# 'KLO', 'KLW', 'MKL', 'RZM', 'RSA', 'RAK', 'TT', 'TB', 'UT', 'UU', 'UB',
+# 'KK', 'KB', 'BU', 'BK', 'BB']
 
 # Hier sind Feature in Gruppen zusammengefasst (vgl. feature_types.txt)
 # die ebenfalls in an.features über ihren Namen ausgewählt werden können:
@@ -79,6 +82,9 @@ an.features = ['Tests', 'Übungen']
 an.algorithm = 'k_means'
 an.scaler = 'Standard'
 
+# Wie hoch soll die Bildqualität sein?
+an.image_quality = 'low'
+
 # Setze die Anzahl der Cluster hier (ignoriert für hierarchy, meanshift und
 # agglomerative clustering) als Zahl oder in einer Liste []:
 an.n_cluster = [2]
@@ -116,16 +122,19 @@ an.max_depth = 3        # Maximale Tiefe des Entscheidungsbaumes
 an.min_leaves = 6       # Minimale Zahl der User in Blättern
 
 # Dann noch weitere Einstellungen:
-an.n_bins = 20          # Anzahl der Bins in Histogrammen
-an.abline = False       # Winkelhalbierende in Scatterplots
-an.clear_recent = True  # Lösche temporären Ergebnisordner vor Analyse
-an.save_plots = True    # Speichere Plots der Analyse
+an.n_bins = 20           # Anzahl der Bins in Histogrammen
+an.show_cluster_of = []  # Zeige Cluster von diesen Featuren in Scatterplots
+an.abline = False        # Winkelhalbierende in Scatterplots
+an.clear_recent = True   # Lösche temporären Ergebnisordner vor Analyse
+an.save_plots = True     # Speichere Plots der Analyse
 
 an.use_time = True      # Verwende Zeit statt Aktivitäten bei Präparieren
+
 # Diese Parameter werden für das Präparieren verwendet. Bei der Bestimmung von
 # bedingten Entropien und Vorhersage-Wahrscheinlichkeiten wird das folgende
 # Feature untersucht, mit dem darauffolgenden Mapping seiner Werte. Die maximale
 # Anzahl zurück betrachteter Datenpunkte wird mit an.max_n_cond_entropy gesetzt:
+
 an.prep_feature = 'LearnType'
 an.prep_mapper = (0, 1, 1, 2, 2, 2, None)
 an.max_n_cond_entropy = 1
