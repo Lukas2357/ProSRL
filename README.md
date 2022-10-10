@@ -7,20 +7,21 @@ Im Zentrum steht das package pysrl, das Modul zum Crawlen der Website, Vorbereit
 
 Das pysrl Package besteht aus einer analysis.py Datei, die eine Analyst Klasse enthält, die alle Funktionalitäten des Packages bündelt. Dazu gibt es eine Reihe Module (classifier, cluster, ...), die diverse Submodule und Funktionen enthalten.
 Diese lassen sich durch direkte Importe aus anderen Dateien nutzen. \
-Standardmäßig ist das package in einem Ordner src abgelegt, der wiederum in einem Projektordner liegt.
+Standardmäßig liegt das pysrl package in einem Projektordner (in dem auch diese README liegen sollte).
 Aus diesem Projektordner können Python Dateien (oder auch Jupyter Notebooks) durch
 
 ```python
-from pysrl.pysrl import FUNKTIONSNAME
+from pysrl.SUBPACKAGE.MODULE import FUNKTION
 ```
 
-alle beliebigen Funktionen importieren. Alternativ kann das package auch mit pip installiert werden, sodass jede Python Datei im System (mit dem richtigen Interpreter) alle Funktionen importieren kann mittels
+alle beliebigen Funktionen importieren (* statt FUNKTION importiert jede Funktion des Moduls). Beispiel:
 
 ```python
-from pysrl.MODULNAME.SUBMODULNAME import FUNKTIONSNAME
+from pysrl.preparer.prep_fcts import load_transformed_data
 ```
 
-mehr dazu unten. Für diese Installation muss im Projektordner ein build von pysrl stattgefunden haben, was standardmäßig der Fall ist. Wie ein manueller (re-)build erfolgen kann wird unten erklärt.
+Alternativ kann das package auch mit pip installiert werden, sodass jede Python Datei im System, alle Funktionen importieren kann, mehr dazu unten. \
+Für diese Installation muss im Projektordner ein build von pysrl stattgefunden haben, was standardmäßig der Fall ist. Wie ein manueller (re-)build erfolgen kann wird unten erklärt.
 
 ## Installation
 
@@ -57,18 +58,13 @@ pip install .
 
 *Achtung: Die Installation erfolgt in den site_packages Ordner, der dem verwendeten pip installer zugeordnet ist. Verwende in jedem Fall pip für Python >= 3.9 und ggbf. pip für Conda, falls das package in einem Conda environment installiert werden soll.*
 
-pysrl steht jetzt als package zur Verfügung und kann überall importiert werden. Die main.py Datei kann also auch außerhalb des Projektordners ausgeführt werden, es muss dann nur der Import geändert werden:
+pysrl steht jetzt als package zur Verfügung und kann überall importiert werden. Die main.py Datei kann also auch außerhalb des Projektordners ausgeführt werden.
 
-```python
-from pysrl.pysrl import Analyst  # ändern zu
-from pysrl.analysis import Analyst
-```
-
-*Achtung: Die Verwendung von pysrl als package is instabil. Importfehler insbesondere durch die Pakete numpy und Pillow können auftreten und müssen manuell behoben werden. Im Zweifelsfall ist das Ausführen von main im Projektordner und importieren von pysrl aus src mittels from src.pysrl... sicherer.*
+*Achtung: Die Verwendung von pysrl als package is instabil. Importfehler insbesondere durch die Pakete numpy und Pillow können auftreten und müssen manuell behoben werden. Im Zweifelsfall ist das Ausführen von main im Projektordner und importieren von pysrl direkt aus dem Unterordner sicherer.*
 
 ## Verwendung
 
-In der main Datei können Parameter eingestellt werden, die sich auf die Auswertung der dort importierten Objekte aus pysrl auswirken. In main_explained sind die Funktionalitäten genauer erklärt. Es gibt einen docs Ordner mit weiteren Informationen (Versionsübersicht, Featureübersicht, Dateiübersicht, etc.).
+In der main Datei können Parameter eingestellt werden, die sich auf die Auswertung der dort importierten Objekte aus pysrl auswirken. In main_explained.py sind die Funktionalitäten genauer erklärt. Es gibt einen docs Ordner mit weiteren Informationen (Versionsübersicht, Featureübersicht, Dateiübersicht, etc.).
 
 Die Auswertung erfolgt vollautomatisch anhand der in main festgelegten Parameter. Allerdings braucht pysrl dazu input Daten über 
 1) Die Aktivitäten der User (csv Datei mit User, Date/Time, Link)
@@ -105,4 +101,12 @@ pdoc -o ./docs -d google pysrl
 pdoc -o ./docs -d google pysrl !pysrl.MODUL_DAS_IGNORIERT_WERDEN_SOLL
 ```
 
-Jetzt kann es mit der Installation weitergehen.
+Jetzt kann es mit der Installation wie oben beschrieben weitergehen.
+
+
+## Disclaimer
+
+Das pysrl package und alle seine Funktionen sind weder cross-plattform getestet, noch existieren umfängliche Unit-Tests. \
+Einwandfreie Funktionalität ist daher keinesfalls garantiert, manuelle Anpassung können erforderlich sein.
+
+Bei jeder Art von Problemen gerne an hunold.prof@gmail.com wenden.
