@@ -11,6 +11,7 @@ from plotly import express as px
 from plotly.graph_objs.scatter import Line, Marker
 from sklearn.decomposition import PCA
 
+from config.helper import load_input
 from ..cluster.cluster_plot_help_fcts import save_figure
 from ..config.constants import RESULTS_PATH
 from .prep_fcts import load_transformed_data
@@ -22,7 +23,7 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
                           legend=False, titles=tuple(), path='',
                           file_extension='', learntypes=None, max_user=100,
                           selected_user=None, max_time_shown=None,
-                          user_ids=None, silent=False):
+                          user_ids=None, silent=False, use_codes=True):
     """Subsequent lineplots of learn type runs for each user
 
     Args:
@@ -40,6 +41,7 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
         max_time_shown (float): The maximum number of minutes shown in the plot
         user_ids (list): List of user ids to annotate in the plots
         silent (bool): Whether to suppress the plt.show() call
+        use_codes (bool): Whether to use user codes in plot labeling (else id)
 
     """
     pd.options.mode.chained_assignment = None  # default='warn'
@@ -64,6 +66,9 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
     c_labels, c_sizes = list(c_counts.keys()), list(c_counts.values())
 
     categories = list(get_categories().values())
+
+    relations = load_input('relation_user_code.csv')
+    relations = relations.set_index('user_id')
 
     indices = [0] if selected_user else range(min(len(c_sizes), max_user))
 
@@ -117,29 +122,31 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
                             palette='tab10', linewidth=0.7, edgecolor='k',
                             style='difficulty', size='SecSpent')
 
-            response = ['-', 'o', '+']
-            for i in range(len(user_df.index) - 1):
-                test_res_quant = user_df['TestResQuant'].iloc[i]
-                test_res_qual = user_df['TestResQual'].iloc[i]
-                task_res = user_df['ResponsTask'].iloc[i]
-                if test_res_qual >= 0:
-                    text = response[test_res_qual] + f' ({test_res_quant})'
-                elif task_res >= 0:
-                    text = response[task_res]
-                else:
-                    text = ''
+            if 'TestResQuant' in user_df.columns:
+                response = ['-', 'o', '+']
+                for i in range(len(user_df.index) - 1):
+                    test_res_quant = user_df['TestResQuant'].iloc[i]
+                    test_res_qual = user_df['TestResQual'].iloc[i]
+                    task_res = user_df['ResponsTask'].iloc[i]
+                    if test_res_qual >= 0:
+                        text = response[test_res_qual] + f' ({test_res_quant})'
+                    elif task_res >= 0:
+                        text = response[task_res]
+                    else:
+                        text = ''
 
-                lt = user_df['LearnType']
-                if i == 0 or i == len(user_df.index):
-                    off = 1
-                elif (lt[i - 1] == lt[i] + 1 or lt[i + 1] == lt[i] + 1) and \
-                        (lt[i - 1] != lt[i] - 1 and lt[i + 1] != lt[i] - 1):
-                    off = - 1
-                else:
-                    off = 1
-                pos = [user_df['CumMin'][i], lt[i] + off]
-                c_ax.annotate(text, pos, horizontalalignment='center',
-                              verticalalignment='center', size=10)
+                    lt = user_df['LearnType']
+                    if i == 0 or i == len(user_df.index):
+                        off = 1
+                    elif (lt[i - 1] == lt[i] + 1
+                          or lt[i + 1] == lt[i] + 1) and \
+                            (lt[i - 1] != lt[i] - 1 and lt[i + 1] != lt[i] - 1):
+                        off = - 1
+                    else:
+                        off = 1
+                    pos = [user_df['CumMin'][i], lt[i] + off]
+                    c_ax.annotate(text, pos, horizontalalignment='center',
+                                  verticalalignment='center', size=10)
 
             level_diff = user_df['CumMin'][user_df['Level'].diff() != 0]
             level_val = user_df['Level'][user_df['Level'].diff() != 0]
@@ -163,19 +170,25 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
 
             if max_time_shown is not None:
                 max_time = max_time_shown
-            plt.setp(ax, xlim=[0, max_time + 1], ylim=[-1, 7],
+            plt.setp(c_ax, xlim=[0, max_time + 1], ylim=[-1, 7],
                      xlabel='Zeit / min', yticks=list(range(7)),
                      yticklabels=labels)
 
-            y_label = f'# {user_id} - ' + str(c_label) if len(cluster) > 0 \
-                else f'# {user_id}'
+            code = relations.loc[user_id, 'Person'] if use_codes else user_id
+
+            y_label = f'{code} - ' + str(c_label) if len(indices) > 1 \
+                else f'{code}'
             c_ax.set_ylabel(y_label, size=16, weight='bold')
             if legend:
                 c_ax.legend(legend_entries, loc='right')
             else:
                 c_ax.legend([], [], frameon=False)
-            title = str(c_label) + ' - ' + titles[c_idx] + '\n' * (rows // 5) \
-                if len(titles) > 0 else str(c_label) + '\n' * (rows // 5)
+            if len(indices) > 1 and len(titles) > c_idx:
+                title = str(c_label) + ' - ' + titles[c_idx] + '\n' * (rows//5)
+            elif len(indices) > 1:
+                title = str(c_label)
+            else:
+                title = str('User Lineplots') + '\n' * (rows // 5)
             fig.suptitle(title, size=24, weight='bold')
             plt.tight_layout()
 

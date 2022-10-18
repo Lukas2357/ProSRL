@@ -33,7 +33,7 @@ def do_cluster(data: pd.DataFrame, features: list, n_clusters=(2, ), dim=1,
         save (bool): Whether to save the resulting plots
         elbow (bool): Whether to show elbow plots (only for kmeans)
         silhouette (bool): Whether to show silhouette plots
-        plot_center (bool): Wether to plot the centers of kMeans clustering
+        plot_center (bool): Whether to plot the centers of kMeans clustering
         verbose (bool): Whether to log actions
     
     """

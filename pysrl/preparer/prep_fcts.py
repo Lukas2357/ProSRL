@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from .prep_help_fcts import *
-from ..config.constants import DATA_PATH
+from ..config.constants import DATA_PATH, INPUT_PATH
 from ..transformer.transform_help_fcts import get_learn_types
 
 
@@ -128,6 +128,7 @@ def add_act_time_columns(df: pd.DataFrame, column_types: dict) -> pd.DataFrame:
 
     overviews = df[['Übersicht']].sum(axis=1)
 
+    drops = [c for c in drops if c in times.columns]
     times = times.drop(drops, axis=1)
     cols = list(df.columns)
     for idx, c in enumerate(cols):
@@ -221,9 +222,10 @@ def get_summed_df(df: pd.DataFrame) -> pd.DataFrame:
     sum_df = grouped_df.sum().reset_index()
 
     for col in ['ResponsTask', 'TestResQual', 'TestResQuant', 'difficulty']:
-        col_mean = df[df[col] >= 0].groupby('User').mean()[col]
-        sum_df[col] = col_mean
-        sum_df[col].fillna(-1, inplace=True)
+        if col in df.columns:
+            col_mean = df[df[col] >= 0].groupby('User').mean()[col]
+            sum_df[col] = col_mean
+            sum_df[col].fillna(-1, inplace=True)
 
     return sum_df
 
@@ -313,8 +315,10 @@ def add_additional_features(df: pd.DataFrame, sum_df: pd.DataFrame,
                    get_fool_features(user_dfs),
                    get_switch_features()]
 
-    all_f = [sum_df.drop(['Category', 'ResponsTask', 'TestResQual',
-                          'TestResQuant', 'difficulty'], axis=1)] + add_feature
+    drops = [c for c in ['Category', 'ResponsTask', 'TestResQual',
+                         'TestResQuant', 'difficulty'] if c in sum_df.columns]
+
+    all_f = [sum_df.drop(drops, axis=1)] + add_feature
 
     return pd.concat(all_f, axis=1)
 
@@ -402,22 +406,33 @@ def get_time_dependent_features(user_dfs: list) -> pd.DataFrame:
 
     """
     mapping = (0, 1, 1, 2, 2, 2)
+
     labels = ['TRegr', 'ÜRegr', 'BKRegr']
-    f1 = time_dependent_features(user_dfs, labels, f_typ='LearnType',
-                                 mapping=mapping)
+    new_features = [time_dependent_features(user_dfs, labels, f_typ='LearnType',
+                                            mapping=mapping)]
+
     labels = ['CatTRegr', 'CatÜRegr', 'CatBKRegr']
-    f2 = time_dependent_features(user_dfs, labels, f_typ='LearnType',
-                                 mapping=mapping, split_cats=True)
+    new_features.append(
+        time_dependent_features(user_dfs, labels, f_typ='LearnType',
+                                mapping=mapping, split_cats=True))
+
     labels = ['DiffLowRegr', 'DiffMedRegr', 'DiffHighRegr']
-    f3 = time_dependent_features(user_dfs, labels, f_typ='difficulty')
-    labels = ['KÜfRegr', 'KÜtwrRegr', 'KÜrRegr']
-    f4 = time_dependent_features(user_dfs, labels, f_typ='ResponsTask')
-    labels = ['TResQuantRegr']
-    f5 = time_dependent_features(user_dfs, labels, f_typ='TestResQuant')
+    new_features.append(
+        time_dependent_features(user_dfs, labels, f_typ='difficulty'))
 
-    f6 = time_dependent_sec_spent(user_dfs)
+    if os.path.isfile(os.path.join(INPUT_PATH, 'task_results.csv')):
+        labels = ['KÜfRegr', 'KÜtwrRegr', 'KÜrRegr']
+        new_features.append(
+            time_dependent_features(user_dfs, labels, f_typ='ResponsTask'))
 
-    return pd.concat([f1, f2, f3, f4, f5] + f6, axis=1)
+    if os.path.isfile(os.path.join(INPUT_PATH, 'test_results.csv')):
+        labels = ['TResQuantRegr']
+        new_features.append(
+            time_dependent_features(user_dfs, labels, f_typ='TestResQuant'))
+
+    new_features += time_dependent_sec_spent(user_dfs)
+
+    return pd.concat(new_features, axis=1)
 
 
 def time_dependent_sec_spent(user_dfs, clabel='SecSpentRegr', cpath='',
@@ -467,6 +482,7 @@ def get_mean_features(user_dfs: list) -> pd.DataFrame:
 
     """
     features = ['ResponsTask', 'TestResQual', 'TestResQuant', 'difficulty']
+    features = [f for f in features if f in user_dfs[0].columns]
     means = {f'mean{feature}': [] for feature in features}
     counts = {f'n{feature}': [] for feature in features}
     for user_df in user_dfs:

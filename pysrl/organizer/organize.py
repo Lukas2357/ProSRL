@@ -15,6 +15,7 @@ def do_orga(formats=('csv', )):
 
     # Load learn_pages overview and data_file:
     learn_pages = load_learn_pages()
+    correct_logfile()
     required_columns = ['Link', 'Date/Time', 'User']
     data_df = load_input('data_complete.csv', columns=required_columns)
 

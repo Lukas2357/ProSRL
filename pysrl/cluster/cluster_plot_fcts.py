@@ -35,6 +35,7 @@ def heatmap(title, data, save, path=None, filename='map', dpi=120, **kwargs):
     fig = plt.figure(figsize=(rows, cols / 4 + 2), dpi=dpi)
     sns.heatmap(data, annot=True, **kwargs)
     plt.title(title, fontweight='bold')
+    plt.tight_layout()
 
     if path is None:
         spath = os.path.join(RESULTS_PATH, 'heatmaps', filename)
@@ -106,7 +107,7 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
         if pvalues:
             kwargs = dict(fmt='.2f', vmin=0, vmax=100, cbar=cbar, cmap=cmap,
                           filename=filename+'_pvalues')
-            title = 'Two sided feature correlation p-values / %'
+            title = 'Two sided corr p-values / %'
             fig = heatmap(title, p, save, **kwargs)
             figures.append(fig)
 

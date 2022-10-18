@@ -223,7 +223,7 @@ class Analyst:
     def raw_lineplots(self):
         """Show raw lineplots prior to the analysis"""
         learn_types_lineplots(save=True, learntypes=self.learntypes,
-                              dpi=300, path='', max_time_shown=180)
+                              dpi=300, path='')
 
     def analyse(self):
         """Perform the actual analysis based on initialized parameters"""

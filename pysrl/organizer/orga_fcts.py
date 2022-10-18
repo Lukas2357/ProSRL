@@ -1,10 +1,11 @@
 """Functions for the organizer.py module"""
+import os
 
 import yaml
 from os import path
 import pandas as pd
 
-from ..config.constants import DATA_PATH
+from ..config.constants import YEAR, INPUT_PATH, ROOT
 
 
 def load_learn_pages(file='learn_pages') -> dict:
@@ -17,7 +18,7 @@ def load_learn_pages(file='learn_pages') -> dict:
         dict: The-learn pages dictionary with labels and attributes of pages
 
     """
-    learn_pages_file = path.join(DATA_PATH, file + '.yaml')
+    learn_pages_file = path.join(ROOT, 'data', file + '.yaml')
 
     with open(learn_pages_file, 'r') as stream:
         data_loaded = yaml.safe_load(stream)
@@ -103,3 +104,20 @@ def map_link(link: str, learn_pages: dict) -> dict:
 
     print(f"Link {link} could not be mapped!")
     return {"Label": ""} | null_dict
+
+
+def correct_logfile():
+    """Logfiles from 2022 have other column names corrected here
+
+    """
+    if YEAR == '2022':
+        f_path = os.path.join(INPUT_PATH, 'data_complete.csv')
+        df = pd.read_csv(f_path, encoding='cp1252', sep=';')
+        mapper = {'Date/Time (GMT)': 'Date/Time',
+                  'Username': 'User',
+                  'Permalink': 'Link'}
+        mapper = {key: value
+                  for key, value in mapper.items() if key in df.columns}
+        df = df.rename(columns=mapper)
+
+        df.to_csv(f_path, sep=';')

@@ -1,11 +1,12 @@
 """Helper functions for the pysrl package"""
 
 import os
+import pathlib
 import shutil
 import warnings
 from pathlib import Path
-import pathlib
 import pandas as pd
+from .constants import YEAR, DATA_PATH, ROOT
 
 FILE_PATH = pathlib.Path(__file__).parent.resolve()
 
@@ -34,7 +35,7 @@ def load_data(filename: str, rm_first_col=True) -> pd.DataFrame:
         pd.DataFrame: Dataframe of all file raw_data
 
     """
-    data_file = os.path.join(get_root(), "data", filename)
+    data_file = os.path.join(DATA_PATH, filename)
     data_df = pd.read_csv(data_file)
 
     if rm_first_col:
@@ -44,49 +45,50 @@ def load_data(filename: str, rm_first_col=True) -> pd.DataFrame:
         return data_df
 
 
-def load_input(filename: str, columns=None) -> pd.DataFrame:
-    """Load any raw_data csv file from the input folder
+def load_input(filename: str, columns=None, sep=',') -> pd.DataFrame:
+    """Load any data csv file from the input folder
 
     Args:
         filename (str): Name of the csv file to load
         columns (optional): Columns to look for in the csv file
+        sep (str): Separator for csv files
 
     Returns:
-        pd.DataFrame: Dataframe of all file raw_data
+        pd.DataFrame: Dataframe of all file data
 
     """
-
-    root = get_root()
-    input_path = os.path.join(root, "input")
+    input_path = os.path.join(ROOT, "input", YEAR)
+    if YEAR == '2022' and filename == 'data_complete.csv':
+        sep = ';'
 
     warn_m = f"Could not find file {filename} in folder {input_path} \n"
 
     input_file = os.path.join(input_path, filename)
     if os.path.isfile(input_file):
-        return pd.read_csv(input_file)
+        return pd.read_csv(input_file, sep=sep)
     if os.path.isfile(input_file + '.csv'):
-        return pd.read_csv(input_file + '.csv')
+        return pd.read_csv(input_file + '.csv', sep=sep)
 
-    warnings.warn(warn_m + f'Look through other folders in {root}. Highly '
+    warnings.warn(warn_m + f'Look through other folders in {ROOT}. Highly '
                            f'recommend to place {filename} in {input_path}')
 
-    for path, _, files in os.walk(root):
+    for path, _, files in os.walk(ROOT):
         for name in files:
             if filename in name:
                 warnings.warn(warn_m + f'But in {path}... load from here.')
-                return pd.read_csv(os.path.join(path, name))
+                return pd.read_csv(os.path.join(path, name), sep=sep)
 
     warnings.warn(f'Could not find {filename} elsewhere... Look for '
                   f'differently named suitable files. Highly recommend to '
                   f'place {filename} in {input_path}')
 
-    for path, _, files in os.walk(root):
+    for path, _, files in os.walk(ROOT):
         if 'pysrl' not in path and 'raw_data' not in path:
             for name in files:
                 warn_m = warn_m + 'But file {name} in {path} contains ' \
                                   'suitable columns. Try using this one...'
                 if '.csv' in name:
-                    df = pd.read_csv(os.path.join(path, name))
+                    df = pd.read_csv(os.path.join(path, name), sep=sep)
                     if all(cols in df.columns for cols in columns):
                         warnings.warn(warn_m)
                         return df
@@ -109,27 +111,6 @@ def get_feature_types() -> list:
         feature_types = f.read().splitlines()
 
     return feature_types
-
-
-def get_root() -> str:
-    """Get the root path from root.txt
-
-    Return:
-        str: The root path as string
-
-    """
-
-    m = "Could not specify ROOT. Go to /pysrl/config, open root.txt, enter" \
-        " the path of the desired root folder in the first line, save and " \
-        "rerun. Alternatively run main.py to specify its location as ROOT."
-
-    with open(os.path.join(FILE_PATH, 'root.txt'), 'r') as f:
-        root = f.read().splitlines()[0]
-
-    if not os.path.isdir(root):
-        raise FileNotFoundError(m)
-
-    return root
 
 
 def set_root(root=""):
@@ -157,14 +138,12 @@ def save_data(df: pd.DataFrame, filename: str, formats=('csv', 'xlsx')):
 
     """
 
-    data_path = os.path.join(get_root(), "data")
-
     if 'csv' in formats:
-        data_file = os.path.join(data_path, filename + '.csv')
+        data_file = os.path.join(DATA_PATH, filename + '.csv')
         os.makedirs(os.path.dirname(data_file), exist_ok=True)
         df.to_csv(data_file)
 
     if 'xlsx' in formats:
-        data_file = os.path.join(data_path, filename + '.xlsx')
+        data_file = os.path.join(DATA_PATH, filename + '.xlsx')
         os.makedirs(os.path.dirname(data_file), exist_ok=True)
         df.to_excel(data_file)

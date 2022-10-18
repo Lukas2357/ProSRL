@@ -1,5 +1,7 @@
 """Transformer for raw_data after organization and prior to preparation"""
+import os
 
+from ..config.constants import INPUT_PATH
 from ..config.helper import save_data
 from .transform_fcts import *
 
@@ -26,11 +28,13 @@ def do_trafo(formats=('csv', )):
              "Category", "Type", "Label"]]
 
     df = drop_incomplete(df)
-    df = add_task_results(df)
-    df = add_test_results(df)
-    df = user_to_id(df)
+    if os.path.isfile(os.path.join(INPUT_PATH, 'task_results.csv')):
+        df = add_task_results(df)
+    if os.path.isfile(os.path.join(INPUT_PATH, 'test_results.csv')):
+        df = add_test_results(df)
+    df = user_to_id(df, select="HE")
 
-    df = time_to_seconds(df)
+    df = time_to_seconds(df, correct_zero=60)
 
     df = split_type(df)
     df = map_columns(df)
@@ -40,10 +44,11 @@ def do_trafo(formats=('csv', )):
     df = df.dropna()
     df = add_user_cum_seconds(df)
 
-    df = add_task_difficulties(df)
+    if os.path.isfile(os.path.join(INPUT_PATH, 'task_difficulties.csv')):
+        df = add_task_difficulties(df)
     df = set_column_dtypes(df)
 
     # Save the resulting raw_data frame as csv:
     save_data(df, filename='data_trafo', formats=formats)
 
-    print("Finished transformation, generated ROOT/raw_data/data_trafo.csv")
+    print("Finished transformation, generated DATA_PATH/data_trafo.csv")

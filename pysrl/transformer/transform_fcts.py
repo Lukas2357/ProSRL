@@ -34,19 +34,18 @@ def user_to_id(df: pd.DataFrame, select="LBenutzer HE") -> pd.DataFrame:
 
     """
     df = df[df["User"].str.contains(select)]
-    user_id = df["User"].str[-3:].astype(int)
-    df["User"] = user_id - min(user_id)
-    unique_ids = sorted(df['User'].unique())
-    df["User"] = df['User'].map(dict(zip(unique_ids, range(len(unique_ids)))))
+    codes = sorted(df['User'].unique())
+    df["User"] = df['User'].map(dict(zip(codes, range(len(codes)))))
 
     return df
 
 
-def time_to_seconds(df: pd.DataFrame) -> pd.DataFrame:
+def time_to_seconds(df: pd.DataFrame, correct_zero=0) -> pd.DataFrame:
     """Replace timestamp with minutes since first activity
 
     Args:
         df (pd.DataFrame): Input dataframe
+        correct_zero (int): Value to replace 0 seconds by
 
     Returns:
         pd.DataFrame: Transformed dataframe
@@ -59,6 +58,7 @@ def time_to_seconds(df: pd.DataFrame) -> pd.DataFrame:
     df['SecSpent'] = (- df['Date/Time'].diff(periods=-1))
     df['SecSpent'] = df['SecSpent'].fillna(pd.Timedelta(seconds=10))
     df['SecSpent'] = df['SecSpent'].dt.total_seconds().astype(int)
+    df.loc[df.SecSpent == 0, 'SecSpent'] = correct_zero
     df.loc[df.SecSpent < 0, 'SecSpent'] = 0
     df['TotSec'] = df['Date/Time'] - min(df['Date/Time'])
     df['TotSec'] = df['TotSec'].dt.total_seconds().astype(int)
@@ -227,7 +227,8 @@ def add_task_difficulties(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: The extended df
     
     """
-    diffs = load_input('task_difficulties.csv', columns=['Label', 'Niveau'])
+    diffs = load_input('task_difficulties.csv', columns=['Label', 'Niveau'],
+                       sep=',')
     diffs.columns = ['Label', 'Niveau']
     mapper = dict(zip(['niedrig', 'mittel', 'hoch'], range(3)))
     diffs['difficulty'] = diffs['Niveau'].map(mapper).astype(int)
