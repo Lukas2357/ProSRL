@@ -115,9 +115,19 @@ def correct_logfile():
         df = pd.read_csv(f_path, encoding='cp1252', sep=';')
         mapper = {'Date/Time (GMT)': 'Date/Time',
                   'Username': 'User',
-                  'Permalink': 'Link'}
+                  'Permalink': 'Link',
+                  'Post Title': 'Title'}
         mapper = {key: value
                   for key, value in mapper.items() if key in df.columns}
         df = df.rename(columns=mapper)
 
-        df.to_csv(f_path, sep=';')
+        # Remove Startseite:
+        df = df[df.Title != 'Startseite']
+
+        # Insert correct times:
+        df = df.sort_values(by='Date/Time').reset_index()
+        times_path = os.path.join(INPUT_PATH, 'exact_time_data.csv')
+        exact_times = pd.read_csv(times_path, encoding='cp1252')
+        df['Date/Time'] = exact_times['Date/Time']
+
+        df.to_csv(f_path, sep=';', index=False)
