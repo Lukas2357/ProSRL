@@ -14,7 +14,7 @@ an = Analyst()
 
 an.performs = {'crawl': 0, 'orga': 0, 'trafo': 0, 'prep': 0, 'analysis': 1}
 an.formats = ('csv',)  # ('csv', 'xlsx') or ('csv', ), latter saves ~50% time
-raw_lineplots = True  # Create and show raw user lineplots before analysis
+raw_lineplots = False  # Create and show raw user lineplots before analysis
 
 an.use_personal = False
 an.rm_incomplete = False
@@ -35,7 +35,7 @@ an.feature_plots = False
 an.user_heatmap = False
 an.cor_heatmap = False
 an.pca_plot = False
-an.user_lineplots = False
+an.user_lineplots = True
 an.elbow = False
 an.silhouette = False
 an.classify = False
