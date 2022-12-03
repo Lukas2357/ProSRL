@@ -1,0 +1,173 @@
+Prio,Feature
+3,TestsActs
+3,ÜbungenActs
+3,KurzaufgabenActs
+3,BeispieleActs
+2,BK_InfoActs
+2,Ü_InfoActs
+0,Übersicht
+4,LearnActs
+3,InfoActs
+0,Learn2Acts
+0,Info2Acts
+5,TotActs
+4,Learn
+4,Info
+0,Learn2
+0,Info2
+4,Tot
+4,ShortLearnActs
+4,ShortInfoActs
+2,LongLearnActs
+2,LongInfoActs
+0,K+BActs
+1,K+ÜActs
+0,K+Ü+TActs
+0,K+B+ÜActs
+0,K+BKIActs
+1,B+BKIActs
+1,Ü+ÜIActs
+0,BKI+ÜIActs
+0,K+B+BKIActs
+0,K+B+BKI+ÜIActs
+0,K+B+BKI+Ü+ÜIActs
+5,readActs
+3,Tests_tpa
+4,Übungen_tpa
+4,Kurzaufgaben_tpa
+4,Beispiele_tpa
+2,BK_Info_tpa
+2,Ü_Info_tpa
+4,Learn_tpa
+3,Info_tpa
+0,Learn2_tpa
+0,Info2_tpa
+4,Tot_tpa
+0,K+B_tpa
+0,K+Ü_tpa
+0,K+Ü+T_tpa
+0,K+B+Ü_tpa
+0,K+BKI_tpa
+1,B+BKI_tpa
+2,Ü+ÜI_tpa
+0,BKI+ÜI_tpa
+0,K+B+BKI_tpa
+0,K+B+BKI+ÜI_tpa
+0,K+B+BKI+Ü+ÜI_tpa
+4,read_tpa
+2,duplicates
+3,nCat
+2,LearnTypeEntropy
+2,CategoryEntropy
+2,DidTest
+3,f1
+1,f2
+2,f12
+3,f1Amp
+1,f2Amp
+2,f12Amp
+3,fMean
+4,PredChance1
+3,PredChance2
+2,PredChance3
+1,PredChance4
+4,CondEntropy1
+3,CondEntropy2
+2,CondEntropy3
+1,CondEntropy4
+4,BeforeTestTime
+3,AfterTestTime
+3,TimePerCat
+0,TRegr Fit
+3,ÜRegr Fit
+3,BKRegr Fit
+0,CatTRegr Fit
+0,CatÜRegr Fit
+0,CatBKRegr Fit
+3,DiffLowRegr Fit
+0,DiffMedRegr Fit
+2,DiffHighRegr Fit
+3,KÜfRegr Fit
+0,KÜtwrRegr Fit
+2,KÜrRegr Fit
+0,TResQuantRegr Fit
+0,TSecSpentRegr Fit
+3,ÜSecSpentRegr Fit
+3,BKSecSpentRegr Fit
+3,SecSpentRegr Fit
+4,meanResponsTask
+1,meanTestResQual
+4,meanTestResQuant
+4,meandifficulty
+0,nResponsTask
+0,nTestResQual
+0,nTestResQuant
+0,ndifficulty
+4,backfrac
+3,foolfrac1
+1,foolfrac2
+2,foolfrac12
+5,Tests
+5,Übungen
+5,Kurzaufgaben
+5,Beispiele
+3,BK_Info
+3,Ü_Info
+2,Cat_0
+2,Cat_1
+2,Cat_2
+2,Cat_3
+2,Cat_4
+2,Cat_5
+2,Grund
+1,Erweitert
+0,K+B
+1,K+Ü
+0,K+Ü+T
+0,K+B+Ü
+0,K+BKI
+1,B+BKI
+2,Ü+ÜI
+2,BKI+ÜI
+0,K+B+BKI
+0,K+B+BKI+ÜI
+0,K+B+BKI+Ü+ÜI
+3,ShortActs
+2,LongActs
+4,read
+5,LearnPerc
+5,InfoPerc
+0,Learn2Perc
+0,Info2Perc
+5,LearnActsPerc
+5,InfoActsPerc
+0,Learn2ActsPerc
+0,Info2ActsPerc
+5,duplicatesPerc
+5,ShortLearnActsPerc
+5,ShortInfoActsPerc
+3,LongLearnActsPerc
+3,LongInfoActsPerc
+5,ShortActsPerc
+4,LongActsPerc
+9,NSt_Pre
+9,NSt_Post
+9,NSt_Diff
+9,SWJK
+9,Note
+9,SWK
+9,FSK
+9,AV
+9,ALZO
+9,VLZO
+9,LZO
+9,Inte
+9,KLO
+9,KLW
+9,MKL
+9,RZM
+9,RSA
+9,RAK
+8,RF_Pre
+8,RF_Post
+8,RF_Diff

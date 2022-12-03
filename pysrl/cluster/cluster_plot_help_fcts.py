@@ -273,7 +273,8 @@ def cor_test(method='pearson') -> Callable:
 
 
 def get_significant_correlations(method, pearson, p_pearson, spearman,
-                                 p_spearman, threshold, min_corr):
+                                 p_spearman, threshold, min_corr,
+                                 max_corr=1):
     """Get a df with significant correlations and corresponding p-values
 
     Args:
@@ -284,6 +285,8 @@ def get_significant_correlations(method, pearson, p_pearson, spearman,
         spearman (pd.DataFrame): corresponding correlation values
         threshold (float): The threshold p-value to consider significant
         min_corr (float): The minimum correlation to check
+        max_corr (float): The maximum correlation to check
+
 
     Returns:
         Tuple: Df of significant correlations with columns of
@@ -309,14 +312,14 @@ def get_significant_correlations(method, pearson, p_pearson, spearman,
     for col in pvalues.columns:
         for idx, p in enumerate(pvalues[col]):
             row = pvalues.index[idx]
-            corr = corrs.loc[col, pvalues.index[idx]]
+            corr = corrs.loc[pvalues.index[idx], col]
             prio1 = prio.loc[col, 'Prio'] if col in prio.index else 3
             prio2 = prio.loc[row, 'Prio'] if row in prio.index else 3
-            if p < threshold and min_corr < abs(corr):
-                c_pearson = pearson.loc[col, pvalues.index[idx]]
-                c_spearman = spearman.loc[col, pvalues.index[idx]]
-                c_pearson_p = p_pearson.loc[col, pvalues.index[idx]]
-                c_spearman_p = p_spearman.loc[col, pvalues.index[idx]]
+            if p < threshold and min_corr <= abs(corr) <= max_corr:
+                c_pearson = pearson.loc[pvalues.index[idx], col]
+                c_spearman = spearman.loc[pvalues.index[idx], col]
+                c_pearson_p = p_pearson.loc[pvalues.index[idx], col]
+                c_spearman_p = p_spearman.loc[pvalues.index[idx], col]
 
                 entry = c_pearson, c_pearson_p, c_spearman, c_spearman_p
                 if (row, col) + entry + (prio2, prio1) not in significant:

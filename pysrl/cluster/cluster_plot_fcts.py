@@ -51,7 +51,8 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
                         filename='cor_heatmap', cbar=False, path=None,
                         all_with_these_features=False, method='pearson',
                         plot_corr=True, pvalues=True, significant=True,
-                        plot_significant=True, threshold=10, min_cor=0):
+                        plot_significant=True, threshold=10, min_cor=0,
+                        max_cor=1):
     """Heatmap of all correlations of the prepared dataframe
 
     Args:
@@ -70,6 +71,7 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
         plot_significant (bool): Whether to plot the significant correlations'
         threshold (float): The threshold value for the correlations
         min_cor (float): The minimum correlation
+        max_cor (float): The maximum correlation
 
     """
     if df is None:
@@ -82,6 +84,8 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
 
     if isinstance(features, str):
         features = [features]
+
+    features = [x for x in features if x in df.columns]
 
     if not all_with_these_features:
         df = df[features]
@@ -114,14 +118,14 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
         if significant:
 
             args = (method, pearson, p_pearson, spearman, p_spearman,
-                    threshold, min_cor)
+                    threshold, min_cor, max_cor)
             df, numeric = get_significant_correlations(*args)
 
             numeric = numeric.drop(['Prio 1', 'Prio 2'], axis=1)
-            df = df.drop(['Prio 1', 'Prio 2'], axis=1)
+            df_plot = df.drop(['Prio 1', 'Prio 2'], axis=1)
 
-            if len(df.index) > 0 and plot_significant:
-                fig = plot_significant_corrs(numeric, df, dpi, save, path,
+            if len(df_plot.index) > 0 and plot_significant:
+                fig = plot_significant_corrs(numeric, df_plot, dpi, save, path,
                                              filename + '_sgnf')
                 figures.append(fig)
 
@@ -436,7 +440,8 @@ def plot_significant_corrs(numeric, df, dpi=300, save=False,
 
 
 def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
-                              cor_threshold=0.8, save=True, path=''):
+                              cor_threshold=0.8, save=True, path='',
+                              df=None):
     """Plot an overview heatmap for significant correlations
 
     Args:
@@ -446,6 +451,7 @@ def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
         cor_threshold (float): The threshold for abs(correlation)
         save (bool): Whether to save the plot
         path (str): Path to save the plots
+        df (pd.DataFrame): The data to use
 
     Returns:
         plt.figure: The figure handle
@@ -459,13 +465,16 @@ def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
                   method=method, plot_significant=False, threshold=p_threshold,
                   min_cor=min_cor)
 
-    _, df = correlation_heatmap(features=features, save=False, **kwargs)
+    _, new_df = correlation_heatmap(df=df, features=features, save=False,
+                                    **kwargs)
 
     for idx in df.index:
 
-        prio1, prio2 = df.loc[idx, "Prio 1"], df.loc[idx, "Prio 2"]
-        feature1, feature2 = df.loc[idx, "Feature 1"], df.loc[idx, "Feature 2"]
-        corr = df.loc[idx, method]
+        prio1, prio2 = new_df.loc[idx, "Prio 1"], new_df.loc[idx, "Prio 2"]
+
+        feature1 = new_df.loc[idx, "Feature 1"]
+        feature2 = new_df.loc[idx, "Feature 2"]
+        corr = new_df.loc[idx, method]
 
         if abs(corr) > cor_threshold:
             if prio2 >= prio1:
@@ -478,7 +487,7 @@ def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
     kwargs['plot_significant'] = True
 
     fig, _ = correlation_heatmap(features=features, save=save, path=path,
-                                 **kwargs)
+                                 df=df, **kwargs)
 
     return fig, features
 

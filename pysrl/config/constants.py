@@ -2,10 +2,10 @@
 
 from os import path
 
-from config.get_root import get_root
+from ..config.get_root import get_root
 
 # VERY IMPORTANT: Set here the year for the data to analyse:
-YEAR = '2022'
+YEAR = '2021'
 
 ROOT = get_root()
 INPUT_PATH = path.join(ROOT, 'input', YEAR)

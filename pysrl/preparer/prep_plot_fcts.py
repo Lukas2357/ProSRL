@@ -11,7 +11,7 @@ from plotly import express as px
 from plotly.graph_objs.scatter import Line, Marker
 from sklearn.decomposition import PCA
 
-from config.helper import load_input
+from ..config.helper import load_input
 from ..cluster.cluster_plot_help_fcts import save_figure
 from ..config.constants import RESULTS_PATH
 from .prep_fcts import load_transformed_data
