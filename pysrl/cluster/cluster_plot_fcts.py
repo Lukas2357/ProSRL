@@ -68,10 +68,10 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
         plot_corr (bool): Whether to plot the correlation heatmap
         pvalues (bool): Whether to show the p-values as separate heatmap
         significant (bool): Whether to show the significant correlation values
-        plot_significant (bool): Whether to plot the significant correlations'
-        threshold (float): The threshold value for the correlations
-        min_cor (float): The minimum correlation
-        max_cor (float): The maximum correlation
+        plot_significant (bool): Whether to plot the significant correlation
+        threshold (float): The threshold p-value for significant correlations
+        min_cor (float): The minimum correlation for significant correlations
+        max_cor (float): The maximum correlation for significant correlations
 
     """
     if df is None:

@@ -18,7 +18,7 @@ raw_lineplots = False  # Create and show raw user lineplots before analysis
 
 an.use_personal = False
 an.rm_incomplete = False
-an.excluded_user = []  # [15, 25, 31, 44]
+an.excluded_user = []
 
 an.features = ['Beispiele', 'Kurzaufgaben']
 

@@ -21,11 +21,23 @@ from .preparer.prep_fcts import get_feature_groups
 class Analyst:
     """The Analyst performing all analysis steps
 
-    """
-    def __init__(self):
+    Analyst comes with two public methods to be addressed from the outside.
+    self.raw_lineplots can be used to generate user lineplots a priori.
+    self.perform can be used to perform any other task specified by params.
+    All other methods are either used by the perform method or exploited to
+    set attributes of the Analyst properly.
 
-        self.performs = {'crawl': 0, 'orga': 0, 'trafo': 0, 'prep': 0,
-                         'analysis': 0}
+    """
+
+    def __init__(self):
+        """Initialize an Analyst to analyse the data with
+
+        During initialization only attributes are set as seen below.
+        The settings represent a usual configuration, but should be overwritten
+        by the user under any common circumstances!
+
+        """
+        self.performs = dict(crawl=0, orga=0, trafo=0, prep=0, analysis=0)
 
         self.df = pd.DataFrame()
 
@@ -196,44 +208,46 @@ class Analyst:
             warnings.warn(f'n_dim of {n_dim} invalid, use number of features '
                           f'{self._n_dim} as fallback instead')
 
-    def perform(self):
-        """Perform any of crawl/orga/trafo/prep/analyse as specified by
-           self.performs and using several parameters passed to __init__(...)
-
-        """
-        selected = list(self.performs.values())
-        fcts = (do_crawl, do_orga, do_trafo, do_prep, self.analyse)
-        args = ([], [self.formats], [self.formats],
-                [self.formats, self.prep_feature,
-                 self.prep_mapper, self.max_n_cond_entropy], [])
-        [fct(*args[i]) for i, fct in enumerate(fcts) if selected[i]]
-
-    def clear_temp_results(self):
+    def _clear_temp_results(self):
         """Delete all results saved in the temporary results folder"""
         if self.clear_recent:
             clear_directory(RECENT_RESULTS_PATH)
 
-    def load_data(self):
-        """Load raw_data from load_prep_data or merge_pers_features"""
-        self.df = merge_pers_feature(self.rm_incomplete) if self.use_personal \
-            else load_prep_data(rm_first_col=False)
-        self.df = self.df[~self.df.User.isin(self.excluded_user)]
-        return self.df.columns
+    def _load_data(self):
+        """Load data from load_prep_data or merge_pers_features and set self.df
 
-    def raw_lineplots(self):
-        """Show raw lineplots prior to the analysis"""
-        learn_types_lineplots(save=True, learntypes=self.learntypes,
-                              dpi=300, path='')
+        """
+        if self.use_personal:
+            df = merge_pers_feature(self.rm_incomplete)
+        else:
+            df = load_prep_data(rm_first_col=False)
 
-    def analyse(self):
-        """Perform the actual analysis based on initialized parameters"""
-        self.clear_temp_results()
+        self.df = df[~df.User.isin(self.excluded_user)]
 
-        features = self.load_data()
-        skipped = [f for f in self.features if f not in features]
+    def _analyse(self):
+        """Perform the actual analysis based on initialized parameters
+
+        self._analyse uses self._clear_temp_results and self._load_data and is
+        used by self.perform
+
+        """
+        # If clear_recent is True, the recent result folder is cleared:
+        self._clear_temp_results()
+
+        # Load the features from file. Will implicitly remove users if
+        # self.rm_incomplete is not empty and add the personal features if
+        # self.use_personal is True:
+        self._load_data()
+
+        # We perform sanity check for the set features to ensure they exist:
+        skipped = [f for f in self.features if f not in self.df.columns]
         if skipped:
             warnings.warn(f"Features {skipped} not found in data, skip those!")
-        self.features = [f for f in self.features if f in features]
+        self.features = [f for f in self.features if f in self.df.columns]
+
+        # Clustering can only be performed in dimension less or equal the number
+        # of features. We choose the user-friendly way and reduce the dimension
+        # if it is too high and warn the user accordingly:
         n_features = len(self.features)
         for idx, dim in enumerate(self.n_dim):
             if dim > n_features:
@@ -241,27 +255,113 @@ class Analyst:
                 warnings.warn(f"Less features selected than dimension, "
                               f"reduce n_dim to {n_features}")
 
+        # User heatmap provides easy to grasp overview of features for selected
+        # users. Will be the first plot generated of option is set:
         if self.user_heatmap:
-            user_heatmap(features=self._features, df=self.df,
-                         save=self.save_plots, dpi=self._image_dpi)
+            user_heatmap(
+                features=self._features,
+                df=self.df,
+                save=self.save_plots,
+                dpi=self._image_dpi
+            )
+
+        # Correlation heatmap provides easy to grasp overview of correlations
+        # between selected features. The heatmap is a colored representation
+        # of the symmetric correlation matrix. If plot_significant is True there
+        # will be an additional colored table with feature combinations as rows,
+        # containing the correlation coefficient as well as the p-value when
+        # testing for dependence. By default, all combinations with p < 0.1 will
+        # be considered significant and included in this table.
+        # Note that the potential number of rows in the table grows
+        # quadratically in the number of features, so generating this table
+        # for many features can be computational expensive and the result will
+        # be cumbersome (it is saved as png):
         if self.cor_heatmap:
-            correlation_heatmap(features=self._features, df=self.df,
-                                save=self.save_plots, dpi=self._image_dpi,
-                                significant=self.plot_significant)
+            correlation_heatmap(
+                features=self._features,
+                df=self.df,
+                save=self.save_plots,
+                dpi=self._image_dpi,
+                significant=self.plot_significant
+            )
+
+        # Now for the actual clustering. Check the do_cluster from
+        # cluster.clustering module for details on parameters and functions:
         if self.clustering:
-            kwargs = {'n_clusters': self.n_cluster, 'alg': self._algorithm,
-                      'scaler': self._scaler, 'plot': self.feature_plots,
-                      'pca': self.pca_plot, 'lineplots': self.user_lineplots,
-                      'abline': self.abline, 'c_thresh': self.color_threshold,
-                      'learntypes': self.learntypes, 'n_bins': self.n_bins,
-                      'dpi': self._image_dpi, 'save': self.save_plots,
-                      'show_cluster_of': self.show_cluster_of,
-                      'elbow': self.elbow, 'silhouette': self.silhouette,
-                      'plot_center': True, 'verbose': True}
+            kwargs = {
+                'n_clusters': self.n_cluster,
+                'alg': self._algorithm,
+                'scaler': self._scaler,
+                'plot': self.feature_plots,
+                'pca': self.pca_plot,
+                'lineplots': self.user_lineplots,
+                'abline': self.abline,
+                'c_thresh': self.color_threshold,
+                'learntypes': self.learntypes,
+                'n_bins': self.n_bins,
+                'dpi': self._image_dpi,
+                'save': self.save_plots,
+                'show_cluster_of': self.show_cluster_of,
+                'elbow': self.elbow,
+                'silhouette': self.silhouette,
+                'plot_center': True,
+                'verbose': True
+            }
+            # Clustering is performed separately with each dimensionality
+            # provided by user in self.n_dim list:
             for dim in self._n_dim:
                 do_cluster(self.df, self.features, dim=dim, **kwargs)
+
+        # Classification can be performed using scikit learns decision tree
+        # algorithm. The feature to classify for is set by self.predict.
+        # Further parameters are explained in classifier.classify.do_classify:
         if self.classify:
-            kwargs = {'predict': self.predict, 'max_depth': self.max_depth,
-                      'min_samples_leaf': self.min_leaves,
-                      'save': self.save_plots, 'dpi': self._image_dpi}
+            kwargs = {
+                'predict': self.predict,
+                'max_depth': self.max_depth,
+                'min_samples_leaf': self.min_leaves,
+                'save': self.save_plots, 'dpi': self._image_dpi
+            }
             do_classify(self.df, self.features, **kwargs)
+
+    def raw_lineplots(self):
+        """Show raw lineplots prior to the analysis
+
+        """
+        learn_types_lineplots(
+            save=True,
+            learntypes=self.learntypes,
+            dpi=300,
+            path=''
+        )
+
+    def perform(self):
+        """Perform any of the functionalities crawl/orga/trafo/prep/analyse
+
+        self.performs defines which of the functionalities is performed.
+        For the sake of simplicity user can just overwrite this attribute
+        directly. All other attributes of the Analyst will be exploited as well,
+        mainly in self._analyse which is called by self.perform (if set).
+
+        """
+        # Below are the five functions that can be performed, zipped with there
+        # required parameters:
+        fcts = (
+            (do_crawl, []),
+            (do_orga, [self.formats]),
+            (do_trafo, [self.formats]),
+            (do_prep, [
+                self.formats,
+                self.prep_feature,
+                self.prep_mapper,
+                self.max_n_cond_entropy
+            ]),
+            (self._analyse, [])
+        )
+        # Any function selected by self.performs is now performed with its
+        # parameters as specified above:
+        [
+            fct(*args)
+            for selected, (fct, args) in zip(self.performs.values(), fcts)
+            if selected
+        ]
