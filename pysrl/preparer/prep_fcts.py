@@ -269,7 +269,6 @@ def add_agg_columns(df=pd.DataFrame(), get_labels_only=False) -> any:
         if label not in ['ShortActs', 'LongActs']:
             df[label + "Acts"] = df[[c + "Acts" for c in combi]].sum(axis=1)
 
-    print()
     return df
 
 
