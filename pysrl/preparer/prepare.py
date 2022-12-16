@@ -17,6 +17,8 @@ def do_prep(formats=('csv', ), feature='LearnType',
     """
     print("Prepare for clustering by getting new features and sum df by user")
 
+
+
     df = load_transformed_data()
     column_types = get_feature_groups()
 

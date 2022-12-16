@@ -12,23 +12,24 @@ from ..config.constants import RECENT_RESULTS_PATH
 from ..config.helper import load_data
 
 
-def init_subplots_plot(n_plots: int, scales=(3.5, 3.2)) -> list:
+def init_subplots_plot(n_plots: int, scales=(3.5, 3.2), n_col=3) -> list:
     """Initialize subplots one for each entry in data_list
 
     Args:
         n_plots (int): The number of subplots to generate
         scales (tuple): sizes for each row and column in the plot
+        n_col (int): The number of columns
 
     Returns:
         list[list[Axis]]: The axis objects for the subplots
 
     """
 
-    rows = (n_plots - 1) // 3 + 1
-    columns = (n_plots - 1) % 3 + 1 if n_plots < 4 or n_plots % 3 == 0 \
-        else n_plots % 3 + 1
+    rows = (n_plots - 1) // n_col + 1
+    columns = (n_plots - 1) % n_col + 1 if n_plots < n_col + 1 or n_plots % n_col == 0 \
+        else n_plots % n_col + 1
     while rows * columns < n_plots:
-        if columns < 4:
+        if columns < n_col + 1:
             columns += 1
         else:
             rows += 1
@@ -39,13 +40,14 @@ def init_subplots_plot(n_plots: int, scales=(3.5, 3.2)) -> list:
     return ax
 
 
-def get_current_axis(data: list, ax: any, idx: int) -> any:
+def get_current_axis(data: list, ax: any, idx: int, n_col=3) -> any:
     """Get the current axis in a potentially multidimensional subplot
 
     Args:
         data (list): The raw_data list to get the length from
         ax (any): A list or nested list of/or axis object
         idx (int): The index of the current axis
+        n_col (int): The number of columns
 
     Returns:
         plt.Axis: The current axis based on idx
@@ -53,18 +55,20 @@ def get_current_axis(data: list, ax: any, idx: int) -> any:
     """
     if len(data) == 1:
         c_ax = ax
-    elif len(data) == 4:
-        c_ax = ax[idx // 2][idx % 2]
-    elif len(data) > 4:
-        c_ax = ax[idx // 3][idx % 3]
+    elif len(data) == n_col + 1:
+        c_ax = ax[idx // (n_col - 1)][idx % n_col - 1]
+    elif len(data) > n_col + 1:
+        c_ax = ax[idx // n_col][idx % n_col]
     else:
         c_ax = ax[idx]
 
     return c_ax
 
 
-def set_labels(columns: list, x_tag: str, c_ax: Axes, dim=1, 
-               y_tag=None) -> Axes:
+def set_labels(
+        columns: list, x_tag: str, c_ax: Axes, dim=1,
+        y_tag=None
+        ) -> Axes:
     """Set the labels of 1D and 2D feature plots with correct units
 
     Args:
@@ -80,8 +84,8 @@ def set_labels(columns: list, x_tag: str, c_ax: Axes, dim=1,
     """
     cols = [data.columns[0] for data in columns]
     perc_cols = ['Tests', 'Übungen', 'Kurzaufgaben', 'Beispiele', 'BK_Info',
-                 'Ü_Info', 'Übersicht', 'Grund', 'Erweitert', 
-                 'PredChance1', 'PredChance2', 'PredChance3', 
+                 'Ü_Info', 'Übersicht', 'Grund', 'Erweitert',
+                 'PredChance1', 'PredChance2', 'PredChance3',
                  'PredChance4', 'LearnTypeEntropy', 'CategoryEntropy'] + \
                 [f'Cat_{i}' for i in range(6)] + \
                 [c for c in cols if 'Amp' in c or 'Perc' in c]
@@ -100,8 +104,10 @@ def set_labels(columns: list, x_tag: str, c_ax: Axes, dim=1,
     return c_ax
 
 
-def save_figure(save: bool, dpi: int, path: str, fig=None, tight=True,
-                fig_format='png', recent=True):
+def save_figure(
+        save: bool, dpi: int, path: str, fig=None, tight=True,
+        fig_format='png', recent=True
+        ):
     """Save figures to proper location
 
     Args:
@@ -126,18 +132,26 @@ def save_figure(save: bool, dpi: int, path: str, fig=None, tight=True,
         if fig is None:
             plt.savefig(path, dpi=dpi, format=fig_format)
             if recent:
-                path = os.path.join(RECENT_RESULTS_PATH,
-                                    os.path.split(path)[-1])
+                path = os.path.join(
+                    RECENT_RESULTS_PATH,
+                    os.path.split(path)[-1]
+                    )
                 plt.savefig(path, dpi=dpi, format=fig_format)
         else:
             fig.patch.set_facecolor('white')
-            plt.savefig(path, dpi=dpi, facecolor=fig.get_facecolor(),
-                        format=fig_format)
+            plt.savefig(
+                path, dpi=dpi, facecolor=fig.get_facecolor(),
+                format=fig_format
+                )
             if recent:
-                path = os.path.join(RECENT_RESULTS_PATH,
-                                    os.path.split(path)[-1])
-                plt.savefig(path, dpi=dpi, facecolor=fig.get_facecolor(),
-                            format=fig_format)
+                path = os.path.join(
+                    RECENT_RESULTS_PATH,
+                    os.path.split(path)[-1]
+                    )
+                plt.savefig(
+                    path, dpi=dpi, facecolor=fig.get_facecolor(),
+                    format=fig_format
+                    )
 
 
 def get_centers_list(centers: pd.DataFrame):
@@ -150,10 +164,14 @@ def get_centers_list(centers: pd.DataFrame):
         list: A list of dfs for each combi, effectively resolving the multiindex
     
     """
-    centers_dfs = [pd.concat([centers[combi, feature]
-                              for feature in combi], axis=1)
-                   for combi in set([combi[0]
-                                     for combi in centers.columns])]
+    centers_dfs = [pd.concat(
+        [centers[combi, feature]
+         for feature in combi], axis=1
+        )
+                   for combi in set(
+            [combi[0]
+             for combi in centers.columns]
+            )]
     return centers_dfs
 
 
@@ -193,8 +211,10 @@ def get_user_learntype_strings(exclude="G", replace=None) -> dict:
     return user_strings
 
 
-def get_learntype_string_ratios(user_strings=None, pad='max', exclude="G",
-                                replace=None) -> pd.DataFrame:
+def get_learntype_string_ratios(
+        user_strings=None, pad='max', exclude="G",
+        replace=None
+        ) -> pd.DataFrame:
     """Get similarity ratios for user LearnType strings
 
     Args:
@@ -272,9 +292,11 @@ def cor_test(method='pearson') -> Callable:
     return pvalue
 
 
-def get_significant_correlations(method, pearson, p_pearson, spearman,
-                                 p_spearman, threshold, min_corr,
-                                 max_corr=1):
+def get_significant_correlations(
+        method, pearson, p_pearson, spearman,
+        p_spearman, threshold, min_corr,
+        max_corr=1
+        ):
     """Get a df with significant correlations and corresponding p-values
 
     Args:
@@ -300,8 +322,10 @@ def get_significant_correlations(method, pearson, p_pearson, spearman,
                two to get a numeric df that can be plotted in a heatmap
 
     """
-    prio = load_data('features_categories.csv',
-                     rm_first_col=False).set_index('Feature')
+    prio = load_data(
+        'features_categories.csv',
+        rm_first_col=False
+        ).set_index('Feature')
     label = 'p-value / %'
     cols = ['Feature 1', 'Feature 2', 'pearson', label, 'spearman', label,
             'Prio 1', 'Prio 2']

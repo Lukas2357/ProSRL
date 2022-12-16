@@ -76,7 +76,7 @@ def do_cluster(data: pd.DataFrame, features: list, n_clusters=(2, ), dim=1,
 
             cluster_kwargs = {'features': features, 'n_cluster': n,
                               'dim': dim, 'scale': scaler, 'alg': alg,
-                              'path': file_path}
+                              'path': file_path, 'save': False}
             
             if verbose:
                 if alg == 'k_means':

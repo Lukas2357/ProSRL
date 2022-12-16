@@ -30,15 +30,20 @@ def merge_pers_feature(rm_incomplete_user=True, fill_na=True) -> pd.DataFrame:
     relation = load_input('relation_user_code.csv', columns=required_columns)
 
     df = pd.merge(relation, data).sort_values('user_id')
-    df = df.drop(['user', 'Person', 'Unnamed: 0'], axis=1)
+    df = df.drop([x for x in ['user', 'Person', 'Unnamed: 0'] if x in df.columns],
+                 axis=1)
 
-    columns_nivst = ['NSt_' + x[28:] for x in df.columns if 'Niveaustufe' in x]
-    columns_nivst[-1] = 'NSt_Diff'
-    columns_rf = ['RF_' + x[18:] for x in df.columns if 'RF' in x]
-    columns_rf[-1] = 'RF_Diff'
-    df.columns = ['User'] + columns_nivst + list(df.columns)[4:-3] + columns_rf
+    try:
+        columns_nivst = ['NSt_' + x[28:] for x in df.columns if 'Niveaustufe' in x]
+        columns_nivst[-1] = 'NSt_Diff'
+        columns_rf = ['RF_' + x[18:] for x in df.columns if 'RF' in x]
+        columns_rf[-1] = 'RF_Diff'
+        df.columns = ['User'] + columns_nivst + list(df.columns)[4:-3] + columns_rf
+    except IndexError:
+        pass
 
-    tot = pd.merge(df, load_prep_data(), left_on='User', right_index=True)
+    tot = pd.merge(df, load_prep_data(), left_on='user_id', right_index=True)
+    tot["User"] = tot["user_id"]
 
     if rm_incomplete_user:
         tot = tot.dropna(subset=['NSt_Post'])

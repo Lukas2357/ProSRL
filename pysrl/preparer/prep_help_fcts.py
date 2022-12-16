@@ -29,8 +29,10 @@ def get_duplicates(df: pd.DataFrame) -> pd.Series:
     duplicates[0] = duplicates[0] - 1
 
     duplicates = duplicates.groupby('User').sum()
-    duplicates = duplicates.reindex(list(range(df['User'].nunique())),
-                                    fill_value=0)
+    duplicates = duplicates.reindex(
+        list(range(df['User'].nunique())),
+        fill_value=0
+        )
 
     return duplicates
 
@@ -98,16 +100,16 @@ def predict_chance(arr: any, known=1) -> float:
     """
     count = {}
     for idx, i in enumerate(arr[:-known]):
-        given = tuple(arr[k] for k in range(idx, idx+known))
+        given = tuple(arr[k] for k in range(idx, idx + known))
         if given in count.keys():
-            count[given].append(arr[idx+known])
+            count[given].append(arr[idx + known])
         else:
-            count[given] = [arr[idx+known]]
+            count[given] = [arr[idx + known]]
     result = 0
     for _, value in count.items():
         result += max(dict(Counter(value)).values())
-        
-    return result/(len(arr)-known)
+
+    return result / (len(arr) - known)
 
 
 def _entropy(p_i: list) -> float:
@@ -126,15 +128,15 @@ def _entropy(p_i: list) -> float:
         n_variables = len(p_i)
     else:
         n_variables = len(p_i[0])
-        
+
     p_i = np.array(p_i)
     p_i = p_i[p_i != 0]
     p_i = p_i[p_i != 1]
-    
+
     if len(p_i) < 2:
         return 0
-    
-    return np.sum(-p_i*np.log(p_i))/np.log(n_variables)
+
+    return np.sum(-p_i * np.log(p_i)) / np.log(n_variables)
 
 
 def cond_entropy(arr: np.array, distance=0) -> float:
@@ -149,38 +151,44 @@ def cond_entropy(arr: np.array, distance=0) -> float:
     
     """
     unique, counts = np.unique(arr, return_counts=True)
-    
+
     if distance == 0:
         return _entropy(counts / len(arr))
-    
+
     cond_entr = 0
-    
+
     for y in product(*repeat(unique, distance)):
-        
+
         arr = list(arr)
-        
+
         cond_ps = []
         y_str = ', '.join([str(i) for i in y])
         y_occ = len(re.findall(fr'{y_str}', repr(arr), overlapped=True))
-        
+
         for x in unique:
-            yx_occ = len(re.findall(fr'{y_str}, {x}', repr(arr), 
-                                    overlapped=True))
+            yx_occ = len(
+                re.findall(
+                    fr'{y_str}, {x}', repr(arr),
+                    overlapped=True
+                    )
+                )
             if y_occ:
-                cond_ps.append(yx_occ/y_occ)
-                
+                cond_ps.append(yx_occ / y_occ)
+
         tot_prob = sum(cond_ps)
-        
+
         if tot_prob:
-            cond_ps = [c/tot_prob for c in cond_ps]
-            
+            cond_ps = [c / tot_prob for c in cond_ps]
+
         cond_entr += y_occ * _entropy(cond_ps) / len(arr)
-        
+
     return cond_entr
 
 
-def get_type_entropy(sum_df: pd.DataFrame, f_type='learntype',
-                     learntypes=None) -> list:
+def get_type_entropy(
+        sum_df: pd.DataFrame, f_type='learntype',
+        learntypes=None
+        ) -> list:
     """Get the entropy associated with specific feature types for each user
 
     Args:
@@ -201,16 +209,16 @@ def get_type_entropy(sum_df: pd.DataFrame, f_type='learntype',
         columns = [f'Cat_{i}' for i in range(6)]
     else:
         raise AttributeError('Not implemented for this feature type')
-        
+
     type_entropy = []
     for user in range(len(sum_df.index)):
         arr = np.array(sum_df[sum_df['User'] == user][list(columns)])
         c_entropy = _entropy(arr / sum(sum(arr)))
-        type_entropy.append(c_entropy*100)
-        
+        type_entropy.append(c_entropy * 100)
+
     return type_entropy
-    
-    
+
+
 def get_before_after_test_times(user_dfs: list) -> pd.DataFrame:
     """Get the times before and after each test averaged over categories
 
@@ -224,27 +232,27 @@ def get_before_after_test_times(user_dfs: list) -> pd.DataFrame:
     new_features = {'BeforeTestTime': [], 'AfterTestTime': [], 'TimePerCat': []}
 
     for user_df in user_dfs:
-        
+
         result = pd.DataFrame()
         cat_min = pd.DataFrame()
         user_df = user_df[['LearnType', 'Category', 'SecSpent']]
-        
+
         for cat in user_df['Category'].unique():
-            
+
             cat_df = user_df[user_df['Category'] == cat].reset_index()
-            
+
             tests_idx = cat_df[cat_df['LearnType'] == 0].index
             cat_minutes = cat_df['SecSpent'].sum()
             cat_min[f'cat_{cat}'] = [cat_minutes]
-            
+
             if len(tests_idx) > 0:
-                mi = min(tests_idx) if len(tests_idx) > 0 else len(cat_df.index) 
-                
+                mi = min(tests_idx) if len(tests_idx) > 0 else len(cat_df.index)
+
                 parts = cat_df.iloc[:mi], cat_df.iloc[mi:]
                 part_minutes = [part[part['LearnType'] > 0]['SecSpent'].sum()
                                 for part in parts]
                 result[f'cat_{cat}'] = part_minutes
-            
+
         result = result.mean(axis=1)
         cat_min = cat_min.mean(axis=1)
         for idx, key in enumerate(new_features.keys()):
@@ -255,12 +263,14 @@ def get_before_after_test_times(user_dfs: list) -> pd.DataFrame:
                     new_features[key].append(result.iloc[idx])
                 else:
                     new_features[key].append(0)
-        
+
     return pd.DataFrame(new_features)
 
 
-def freq_features(user_dfs: list, use_time=False, used_learntypes=None,
-                  merge=False) -> pd.DataFrame:
+def freq_features(
+        user_dfs: list, use_time=False, used_learntypes=None,
+        merge=False
+        ) -> pd.DataFrame:
     """Get the features about the frequency of learn task changes
 
     Args:
@@ -299,19 +309,23 @@ def freq_features(user_dfs: list, use_time=False, used_learntypes=None,
     for mean, f in run_data:
         if len(f) == 1:
             f = f + f
-        features.append((mean, f[0][0], f[1][0],
-                         (f[0][0] + f[1][0]) / 2,
-                         f[0][1] * 100, f[1][1] * 100,
-                         f[0][1] * 100 + f[1][1] * 100))
+        features.append(
+            (mean, f[0][0], f[1][0],
+             (f[0][0] + f[1][0]) / 2,
+             f[0][1] * 100, f[1][1] * 100,
+             f[0][1] * 100 + f[1][1] * 100)
+            )
 
     labels = ["fMean", "f1", "f2", "f12", "f1Amp", "f2Amp", "f12Amp"]
     return pd.DataFrame(features, columns=labels)
 
 
-def time_dependent_features(user_dfs: list, labels: list, f_typ='LearnType',
-                            mapping=None, split_cats=False, plot=False,
-                            n_min=3, dpi=200, save=False, n_ranges=2,
-                            path='', threshold=2) -> pd.DataFrame | list:
+def time_dependent_features(
+        user_dfs: list, labels: list, f_typ='LearnType',
+        mapping=None, split_cats=False, plot=False,
+        n_min=3, dpi=200, save=False, n_ranges=2,
+        path='', threshold=2
+        ) -> pd.DataFrame | list:
     """Get time dependent features for each user by temporal regression
 
     Args:
@@ -345,7 +359,7 @@ def time_dependent_features(user_dfs: list, labels: list, f_typ='LearnType',
     fig, ax = None, None
 
     for user_df in user_dfs:
-        
+
         user_df = user_df[user_df.SecSpent < 1800]
         user_df['UserCumSec'] = user_df['SecSpent'].cumsum()
         user_df = user_df[user_df[f_typ] >= 0]
@@ -368,18 +382,20 @@ def time_dependent_features(user_dfs: list, labels: list, f_typ='LearnType',
                 y_max = max(y_max, max(y))
             x_ranges, y_ranges = get_ranges(x, n_ranges, y)
             if len(x) > 0:
-                a, w = add_regression(x, x, y, y, ax, [], [], plot, n_min,
-                                      x_ranges, y_ranges,
-                                      np.array([0]*(n_ranges+1)), 'k',
-                                      labels[0])
+                a, w = add_regression(
+                    x, x, y, y, ax, [], [], plot, n_min,
+                    x_ranges, y_ranges,
+                    np.array([0] * (n_ranges + 1)), 'k',
+                    labels[0]
+                    )
                 n_artists += 1
             else:
                 a = [0]
-            fit_param[f'{labels[0]} Fit'].append(a[0]*100)
+            fit_param[f'{labels[0]} Fit'].append(a[0] * 100)
 
         else:
             values = dict(Counter(mapping)).keys()
-            prev_range_data = np.zeros(n_ranges+1)
+            prev_range_data = np.zeros(n_ranges + 1)
 
             for idx, (label, value) in enumerate(zip(labels, values)):
 
@@ -392,7 +408,7 @@ def time_dependent_features(user_dfs: list, labels: list, f_typ='LearnType',
                         else user_df
                     data['UserCumFeatureSec'] = data['SecSpent'].cumsum()
 
-                    if len(data.index) > threshold*len(labels):
+                    if len(data.index) > threshold * len(labels):
 
                         data[label] = user_df['SecSpent']
                         data.loc[user_df[f_typ] != value, label] = 0
@@ -413,45 +429,51 @@ def time_dependent_features(user_dfs: list, labels: list, f_typ='LearnType',
                             y_max = max(y_max, max(y_line))
 
                         if len(x) > 0:
-                            a, w = add_regression(x, x_marker, y_line,
-                                                  y_marker, ax, a, w,
-                                                  plot, n_min, x_ranges,
-                                                  y_ranges, prev_range_data,
-                                                  color, labels[idx])
+                            a, w = add_regression(
+                                x, x_marker, y_line,
+                                y_marker, ax, a, w,
+                                plot, n_min, x_ranges,
+                                y_ranges, prev_range_data,
+                                color, labels[idx]
+                                )
                             n_artists += 1
                         else:
                             a.append(0)
                             w.append(0)
                         prev_range_data += y_ranges
 
-                a_mean = 100*np.average(a, weights=w) if a else 0
+                a_mean = 100 * np.average(a, weights=w) if a else 0
 
                 fit_param[f'{label} Fit'].append(a_mean)
-            
+
         if plot:
             plt.xlabel('Zeit des Users auf betrachteten Seiten / min')
             if len(labels) > 1:
                 plt.ylabel('Anteil an allen bisherigen Aktionen')
             if len(user_df['UserCumSec']) > 0:
                 if max(user_df['UserCumSec']) > 0:
-                    plt.xlim([0, max(user_df['UserCumSec'])/60])
+                    plt.xlim([0, max(user_df['UserCumSec']) / 60])
                 if y_max > 0:
-                    plt.ylim([-0.02, y_max*1.02])
+                    plt.ylim([-0.02, y_max * 1.02])
             if n_artists > 0:
                 plt.legend(ncol=len(labels))
                 user_id = str(min(user_df.User))
-                save_figure(save=save, path=os.path.join(path, user_id),
-                            dpi=dpi, fig=fig, recent=False)
+                save_figure(
+                    save=save, path=os.path.join(path, user_id),
+                    dpi=dpi, fig=fig, recent=False
+                    )
                 figures.append((fig, ax))
 
     if plot:
         return figures
-            
+
     return pd.DataFrame(fit_param)
 
 
-def get_ranges(x: ArrayLike, n_ranges: int, y: ArrayLike,
-               norm: ArrayLike = None) -> tuple[np.array, np.array]:
+def get_ranges(
+        x: ArrayLike, n_ranges: int, y: ArrayLike,
+        norm: ArrayLike = None
+        ) -> tuple[np.array, np.array]:
     """Split x and y points into n ranges of same x size
 
     Args:
@@ -474,7 +496,7 @@ def get_ranges(x: ArrayLike, n_ranges: int, y: ArrayLike,
                 if i == 0:
                     y_ranges.append(0)
                 else:
-                    y_ranges.append(np.mean(y[prev_i:i+1]))
+                    y_ranges.append(np.mean(y[prev_i:i + 1]))
             prev_i = i
             k += 1
         if k > n_ranges:
@@ -482,22 +504,24 @@ def get_ranges(x: ArrayLike, n_ranges: int, y: ArrayLike,
     l_diff = n_ranges + 1 - len(x_ranges)
     if l_diff > 0:
         if len(x_ranges) > 0:
-            x_ranges.extend([x[-1]]*l_diff)
-            y_ranges.extend([y[-1]]*l_diff)
+            x_ranges.extend([x[-1]] * l_diff)
+            y_ranges.extend([y[-1]] * l_diff)
             if norm is not None:
-                norm_ranges.extend([norm[-1]]*l_diff)
+                norm_ranges.extend([norm[-1]] * l_diff)
 
     if norm is None:
         return np.array(x_ranges), np.array(y_ranges)
     else:
-        return np.array(x_ranges), np.array(y_ranges)/np.array(norm_ranges)
+        return np.array(x_ranges), np.array(y_ranges) / np.array(norm_ranges)
 
 
-def add_regression(x_line: np.array, x_marker: np.array, y_line: np.array,
-                   y_marker: np.array, axes: plt.Axes, a: list, weights: list,
-                   plot: bool, n_min: int, x_ranges: np.array,
-                   y_ranges: np.array, prev_range_data: np.array, color: any,
-                   label: str) -> tuple:
+def add_regression(
+        x_line: np.array, x_marker: np.array, y_line: np.array,
+        y_marker: np.array, axes: plt.Axes, a: list, weights: list,
+        plot: bool, n_min: int, x_ranges: np.array,
+        y_ranges: np.array, prev_range_data: np.array, color: any,
+        label: str
+        ) -> tuple:
     """Add a linear regression result and plot to a given list of results
 
     Args:
@@ -527,26 +551,30 @@ def add_regression(x_line: np.array, x_marker: np.array, y_line: np.array,
     reg = np.polyfit(x_line, y_line, 1) if len(x_line) >= n_min else [0, 0]
 
     if plot:
-        axes.plot(x_line, y_line, ':', color=color, ms=8,
-                  label=label + ' Anteil')
-        axes.plot(x_marker, y_marker, '.', color=color, ms=8,
-                  label=label + ' Actions')
+        axes.plot(
+            x_line, y_line, ':', color=color, ms=8,
+            label=label + ' Anteil'
+            )
+        axes.plot(
+            x_marker, y_marker, '.', color=color, ms=8,
+            label=label + ' Actions'
+            )
         # axes.plot(x, np.polyval(reg, x), '--', color=color, label='_')
         for i in range(1, len(y_ranges)):
             y_min = prev_range_data[i]
             if color == 'k':
                 y_min = y_min / max(y_line) if max(y_line) > 0 else y_min
-            y_max = (y_ranges[i]+prev_range_data[i])
+            y_max = (y_ranges[i] + prev_range_data[i])
             if color == 'k':
                 y_max = y_max / max(y_line) if max(y_line) > 0 else y_max
             axes.axvspan(
-                x_ranges[i-1], x_ranges[i], y_min, y_max,
+                x_ranges[i - 1], x_ranges[i], y_min, y_max,
                 alpha=0.35, color=color, label='_'
             )
 
     a.append(reg[-2])
     weights.append(len(x_line))
-        
+
     return a, weights
 
 
@@ -616,8 +644,10 @@ def get_fool_features(user_dfs: list, plot=False) -> pd.DataFrame:
         fool_frac_1 = sum(line[i] + 1 == line[i + 1] for i in range(n - 1)) / n
         fool_frac_2 = sum(line[i] + 2 == line[i + 1] for i in range(n - 1)) / n
 
-        c_features = pd.DataFrame([back_frac, fool_frac_1, fool_frac_2,
-                                   fool_frac_1 + fool_frac_2]).T
+        c_features = pd.DataFrame(
+            [back_frac, fool_frac_1, fool_frac_2,
+             fool_frac_1 + fool_frac_2]
+            ).T
         features = pd.concat([features, c_features], axis=0)
 
     features.columns = ['backfrac', 'foolfrac1', 'foolfrac2', 'foolfrac12']
@@ -626,8 +656,49 @@ def get_fool_features(user_dfs: list, plot=False) -> pd.DataFrame:
     return features
 
 
-def get_switch_features(exclude='G', replace=None,
-                        threshold=0.01) -> pd.DataFrame:
+def get_fool_features_cat(user_dfs: list) -> pd.DataFrame:
+    """Get features indicating if user stupidly follows learning environment
+
+    Args:
+        user_dfs (list): The dfs with activities of each user
+
+    """
+    features = pd.DataFrame()
+
+    for user_df in user_dfs:
+
+        line = user_df.Category.to_list()
+        n = len(line)
+        back_frac = sum(line[i] > line[i + 1] for i in range(n - 1))
+        fool_frac = sum(line[i] + 1 == line[i + 1] for i in range(n - 1))
+        jump_frac = sum(line[i] + 1 < line[i + 1] for i in range(n - 1))
+
+        line = user_df.Topic[user_df.Topic > -1].to_list()
+        print(line)
+        n = len(line)
+        back_frac_fine = sum(line[i] > line[i + 1] for i in range(n - 1))
+        fool_frac_fine = sum(line[i] + 1 == line[i + 1] for i in range(n - 1))
+        jump_frac_fine = sum(line[i] + 1 < line[i + 1] for i in range(n - 1))
+
+        c_features = pd.DataFrame(
+            [back_frac, fool_frac, jump_frac, back_frac_fine,
+             fool_frac_fine, jump_frac_fine]
+            ).T
+
+        features = pd.concat([features, c_features], axis=0)
+
+    features.columns = ['backfrac_cat', 'foolfrac_cat', 'jumpfrac_cat',
+                        'backfrac_topic', 'foolfrac_topic', 'jumpfrac_topic']
+
+    features.index = range(len(features))
+
+    return features
+
+
+def get_switch_features(
+        exclude='G', replace=None,
+        threshold=0.01
+        ) -> pd.DataFrame:
     """Get features for user switches between learntypes
 
     Args:
@@ -722,10 +793,14 @@ def plot_lines(user_df, pages, line=None, save=False, path='', dpi=100):
         )
 
     ax.set_xlim([0, len(pages)])
-    plt.tick_params(bottom=False, top=False, labelbottom=False, labelleft=True,
-                    right=False, left=True)
-    ax.set_xlabel('Intuitive Anordnung der Seiten auf der Lernplattform -> '
-                  'Farben = Kategorien')
+    plt.tick_params(
+        bottom=False, top=False, labelbottom=False, labelleft=True,
+        right=False, left=True
+        )
+    ax.set_xlabel(
+        'Intuitive Anordnung der Seiten auf der Lernplattform -> '
+        'Farben = Kategorien'
+        )
     ax.set_ylabel('User Aktionen')
     plt.gca().invert_yaxis()
 

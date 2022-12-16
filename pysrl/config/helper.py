@@ -45,20 +45,25 @@ def load_data(filename: str, rm_first_col=True) -> pd.DataFrame:
         return data_df
 
 
-def load_input(filename: str, columns=None, sep=',') -> pd.DataFrame:
+def load_input(filename: str, columns=None, sep=',', year=None) -> pd.DataFrame:
     """Load any data csv file from the input folder
 
     Args:
         filename (str): Name of the csv file to load
         columns (optional): Columns to look for in the csv file
         sep (str): Separator for csv files
+        year (int): The year from which to load data
 
     Returns:
         pd.DataFrame: Dataframe of all file data
 
     """
-    input_path = os.path.join(ROOT, "input", YEAR)
-    if YEAR == '2022' and filename == 'data_complete.csv':
+
+    if year is None:
+        year = YEAR
+
+    input_path = os.path.join(ROOT, "input", year)
+    if year == '2022' and filename == 'data_complete.csv':
         sep = ';'
 
     warn_m = f"Could not find file {filename} in folder {input_path} \n"

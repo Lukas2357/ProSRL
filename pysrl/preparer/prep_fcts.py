@@ -117,7 +117,7 @@ def add_act_time_columns(df: pd.DataFrame, column_types: dict) -> pd.DataFrame:
     """
     df = df[df.SecSpent > 0]
     drops = ['User', 'LearnType', 'SecSpent', 'Category', 'ResponsTask',
-             'TestResQual', 'TestResQuant', 'difficulty', 'Label']
+             'TestResQual', 'TestResQuant', 'difficulty', 'Label', 'Topic']
     times = df.mul(df['SecSpent'], axis=0)
 
     learn_cols = df[column_types['learn']]
@@ -312,6 +312,7 @@ def add_additional_features(df: pd.DataFrame, sum_df: pd.DataFrame,
                    get_time_dependent_features(user_dfs),
                    get_mean_features(user_dfs),
                    get_fool_features(user_dfs),
+                   get_fool_features_cat(user_dfs),
                    get_switch_features()]
 
     drops = [c for c in ['Category', 'ResponsTask', 'TestResQual',

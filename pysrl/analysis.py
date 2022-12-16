@@ -304,7 +304,7 @@ class Analyst:
                 'show_cluster_of': self.show_cluster_of,
                 'elbow': self.elbow,
                 'silhouette': self.silhouette,
-                'plot_center': True,
+                'plot_center': False,
                 'verbose': True
             }
             # Clustering is performed separately with each dimensionality

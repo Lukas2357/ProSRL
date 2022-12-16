@@ -39,7 +39,7 @@ def do_trafo(formats=('csv', )):
     df = split_type(df)
     df = map_columns(df)
     df = fill_na(df)
-    df = drop_unwanted_columns(df, ["Title", "Topic"])
+    df = drop_unwanted_columns(df, ["Title"])
 
     df = df.dropna()
     df = add_user_cum_seconds(df)

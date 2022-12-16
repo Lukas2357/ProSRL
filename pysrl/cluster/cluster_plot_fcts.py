@@ -47,12 +47,14 @@ def heatmap(title, data, save, path=None, filename='map', dpi=120, **kwargs):
     return fig
 
 
-def correlation_heatmap(features=None, df=None, save=False, dpi=150,
-                        filename='cor_heatmap', cbar=False, path=None,
-                        all_with_these_features=False, method='pearson',
-                        plot_corr=True, pvalues=True, significant=True,
-                        plot_significant=True, threshold=10, min_cor=0,
-                        max_cor=1):
+def correlation_heatmap(
+        features=None, df=None, save=False, dpi=150,
+        filename='cor_heatmap', cbar=False, path=None,
+        all_with_these_features=False, method='pearson',
+        plot_corr=True, pvalues=True, significant=True,
+        plot_significant=True, threshold=10, min_cor=0,
+        max_cor=1
+):
     """Heatmap of all correlations of the prepared dataframe
 
     Args:
@@ -109,8 +111,10 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
         cmap = sns.diverging_palette(133, 10, as_cmap=True)
 
         if pvalues:
-            kwargs = dict(fmt='.2f', vmin=0, vmax=100, cbar=cbar, cmap=cmap,
-                          filename=filename+'_pvalues')
+            kwargs = dict(
+                fmt='.2f', vmin=0, vmax=100, cbar=cbar, cmap=cmap,
+                filename=filename + '_pvalues'
+            )
             title = 'Two sided corr p-values / %'
             fig = heatmap(title, p, save, **kwargs)
             figures.append(fig)
@@ -125,16 +129,20 @@ def correlation_heatmap(features=None, df=None, save=False, dpi=150,
             df_plot = df.drop(['Prio 1', 'Prio 2'], axis=1)
 
             if len(df_plot.index) > 0 and plot_significant:
-                fig = plot_significant_corrs(numeric, df_plot, dpi, save, path,
-                                             filename + '_sgnf')
+                fig = plot_significant_corrs(
+                    numeric, df_plot, dpi, save, path,
+                    filename + '_sgnf'
+                )
                 figures.append(fig)
 
     plt.show()
     return figures, df
 
 
-def user_heatmap(user=None, features=None, df=None, save=False, dpi=300,
-                 filename='user_heatmap', cbar=False):
+def user_heatmap(
+        user=None, features=None, df=None, save=False, dpi=300,
+        filename='user_heatmap', cbar=False
+):
     """Heatmap of all features for given set of users
 
     Args:
@@ -186,9 +194,11 @@ def user_heatmap(user=None, features=None, df=None, save=False, dpi=300,
     plt.show()
 
 
-def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
-                       abline=False, save=True, path="", dpi=300,
-                       user_ids=None, show_cluster_of=None) -> list:
+def cluster_pairs_plot(
+        pairs: list[pd.DataFrame], labels: pd.DataFrame,
+        abline=False, save=True, path="", dpi=300,
+        user_ids=None, show_cluster_of=None, n_col=3
+) -> list:
     """Plot the kmeans clustering result for a pair of features
 
     Args:
@@ -200,16 +210,24 @@ def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
         dpi (int): Dots per inch for saving the figure
         user_ids (any): User ids to annotate in the plot, uses index if None
         show_cluster_of (list): Feature combi whose clusters shown in all plots
+        n_col (int): The number of columns
 
     """
-    ax, label = init_subplots_plot(len(pairs)), ''
+
+    pers_features = ['PersonNO', 'SW', 'SWKJ', 'Int', 'LZO', 'ALZO', 'VLZO', 'AV',
+                     'FSK', 'Pre', 'Post', 'LE', 'PreN1', 'PostN1', 'PreN2', 'PostN2',
+                     'PreN3', 'PostN3', 'LEN1', 'LEN2', 'LEN3']
+
+    # pairs = [x for x in pairs if sum(c in pers_features for c in x.columns) == 1]
+
+    ax, label = init_subplots_plot(len(pairs), n_col=n_col), ''
 
     if show_cluster_of is not None:
         label = get_color_label(show_cluster_of, labels)
 
     for idx, data in enumerate(pairs):
 
-        c_ax = get_current_axis(pairs, ax, idx)
+        c_ax = get_current_axis(pairs, ax, idx, n_col=n_col)
 
         x_data, y_data = data.iloc[:, 0], data.iloc[:, 1]
         x_tag, y_tag = data.columns[0], data.columns[1]
@@ -224,15 +242,19 @@ def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
 
         legend = True if idx == 0 else False
 
-        sns.scatterplot(x=x_data, y=y_data, ax=c_ax, hue=c_label,
-                        palette="tab10", legend=legend, s=60)
+        sns.scatterplot(
+            x=x_data, y=y_data, ax=c_ax, hue=c_label,
+            palette="tab10", legend=legend, s=60
+        )
 
         user_ids = data.index if user_ids is None else user_ids
 
         for i, j in enumerate(user_ids):
-            c_ax.annotate(str(j), [list(x_data)[i], list(y_data)[i]],
-                          horizontalalignment='center',
-                          verticalalignment='center', size=5)
+            c_ax.annotate(
+                str(j), [list(x_data)[i], list(y_data)[i]],
+                horizontalalignment='center',
+                verticalalignment='center', size=5
+            )
 
         c_ax.set_title(f"{x_tag} vs {y_tag}", fontweight='semibold')
         set_labels(pairs, x_tag, c_ax, 2, y_tag)
@@ -247,8 +269,10 @@ def cluster_pairs_plot(pairs: list[pd.DataFrame], labels: pd.DataFrame,
     return ax
 
 
-def cluster_single_plot(columns: list[pd.DataFrame], labels: pd.DataFrame,
-                        save=True, path="", dpi=300, n_bins=20) -> list:
+def cluster_single_plot(
+        columns: list[pd.DataFrame], labels: pd.DataFrame,
+        save=True, path="", dpi=300, n_bins=20
+) -> list:
     """Plot the kmeans clustering result for single features
 
     Args:
@@ -276,12 +300,16 @@ def cluster_single_plot(columns: list[pd.DataFrame], labels: pd.DataFrame,
         if len(data[tag].unique()) < 10:
             data['count'] = 1
             data = data.groupby([tag, 'label']).count().reset_index()
-            sns.barplot(ax=c_ax, data=data, x=tag, y='count', hue='label',
-                        palette="tab10")
+            sns.barplot(
+                ax=c_ax, data=data, x=tag, y='count', hue='label',
+                palette="tab10"
+            )
         else:
-            sns.histplot(ax=c_ax, data=data, x=tag, hue='label',
-                         multiple='stack', bins=n_bins, palette="tab10",
-                         legend=legend)
+            sns.histplot(
+                ax=c_ax, data=data, x=tag, hue='label',
+                multiple='stack', bins=n_bins, palette="tab10",
+                legend=legend
+            )
         c_ax.set_title(f"{tag}", fontweight='semibold')
         c_ax.set_ylabel("occurrences")
         set_labels(columns, tag, c_ax)
@@ -293,8 +321,10 @@ def cluster_single_plot(columns: list[pd.DataFrame], labels: pd.DataFrame,
     return ax
 
 
-def plot_kmeans_centers(centers: pd.DataFrame, centers_inv: pd.DataFrame,
-                        save=True, path="", dpi=300):
+def plot_kmeans_centers(
+        centers: pd.DataFrame, centers_inv: pd.DataFrame,
+        save=True, path="", dpi=300
+):
     """Plot the centers of the kmeans clustering in terms of a heatmap
 
     Args:
@@ -316,8 +346,10 @@ def plot_kmeans_centers(centers: pd.DataFrame, centers_inv: pd.DataFrame,
     for idx, df in enumerate(centers_dfs):
         c_ax_0 = get_current_axis(centers_dfs, ax, idx)
         df.columns = [c[1] for c in df.columns]
-        sns.heatmap(df, ax=c_ax_0, annot=centers_inv_dfs[idx], fmt='.2f',
-                    cbar=False)
+        sns.heatmap(
+            df, ax=c_ax_0, annot=centers_inv_dfs[idx], fmt='.2f',
+            cbar=False
+        )
 
     plt.suptitle('Cluster centers of kMeans', fontweight='bold')
     plt.tight_layout()
@@ -347,8 +379,10 @@ def get_color_label(show_cluster_of: list, labels: pd.DataFrame) -> list:
     return label
 
 
-def string_ratio_grid(ratios_df=None, clustermap=True, pad='max', exclude='G',
-                      replace=None, save=False, dpi=300) -> np.array:
+def string_ratio_grid(
+        ratios_df=None, clustermap=True, pad='max', exclude='G',
+        replace=None, save=False, dpi=300
+) -> np.array:
     """Get a grid for string ratios and possibly plot it as clustermap
 
     Args:
@@ -366,8 +400,10 @@ def string_ratio_grid(ratios_df=None, clustermap=True, pad='max', exclude='G',
     """
 
     if ratios_df is None:
-        ratios_df = get_learntype_string_ratios(pad=pad, exclude=exclude,
-                                                replace=replace)
+        ratios_df = get_learntype_string_ratios(
+            pad=pad, exclude=exclude,
+            replace=replace
+        )
 
     max_user = max(ratios_df.user1)
     grid = np.zeros([max_user + 1, max_user + 1])
@@ -387,9 +423,11 @@ def string_ratio_grid(ratios_df=None, clustermap=True, pad='max', exclude='G',
     return grid
 
 
-def plot_significant_corrs(numeric, df, dpi=300, save=False,
-                           path=None, filename='cor_heatmap',
-                           title='Significant correlations'):
+def plot_significant_corrs(
+        numeric, df, dpi=300, save=False,
+        path=None, filename='cor_heatmap',
+        title='Significant correlations'
+):
     """Plot the significant correlations as a heatmap
 
     Args:
@@ -413,21 +451,31 @@ def plot_significant_corrs(numeric, df, dpi=300, save=False,
             mask[col_m] = col != col_m
         if col in ['pearson', 'spearman', 'cor', 'correlation',
                    'spear', 'pears']:
-            sns.heatmap(numeric, annot=True, fmt='.3f', vmin=-1,
-                        vmax=1, cbar=False, mask=mask)
+            sns.heatmap(
+                numeric, annot=True, fmt='.3f', vmin=-1,
+                vmax=1, cbar=False, mask=mask
+            )
         elif 'F' in col:
-            sns.heatmap(numeric, annot=df, fmt='', cbar=False,
-                        mask=mask, cmap=cmap2, vmin=1, vmax=8)
+            sns.heatmap(
+                numeric, annot=df, fmt='', cbar=False,
+                mask=mask, cmap=cmap2, vmin=1, vmax=8
+            )
         elif 'p-value' in col or col in ['spear_p', 'pears_p']:
-            sns.heatmap(numeric, annot=True, fmt='.4f', mask=mask,
-                        vmin=0, vmax=5, cbar=False, cmap=cmap1)
+            sns.heatmap(
+                numeric, annot=True, fmt='.4f', mask=mask,
+                vmin=0, vmax=5, cbar=False, cmap=cmap1
+            )
         elif 'mean' in col:
-            sns.heatmap(numeric, annot=True, fmt='.2f', mask=mask,
-                        vmin=-3, vmax=3, cbar=False)
+            sns.heatmap(
+                numeric, annot=True, fmt='.2f', mask=mask,
+                vmin=-3, vmax=3, cbar=False
+            )
 
     plt.title(label=title, fontweight='bold')
-    plt.tick_params(axis='both', which='major', labelbottom=False,
-                    bottom=False, top=False, labeltop=True)
+    plt.tick_params(
+        axis='both', which='major', labelbottom=False,
+        bottom=False, top=False, labeltop=True
+    )
 
     if path is None:
         spath = os.path.join(RESULTS_PATH, 'heatmaps', filename)
@@ -439,9 +487,11 @@ def plot_significant_corrs(numeric, df, dpi=300, save=False,
     return fig
 
 
-def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
-                              cor_threshold=0.8, save=True, path='',
-                              df=None):
+def significant_corrs_heatmap(
+        method='pearson', p_threshold=5, min_cor=0,
+        cor_threshold=0.8, save=True, path='',
+        df=None
+):
     """Plot an overview heatmap for significant correlations
 
     Args:
@@ -461,12 +511,16 @@ def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
     features = list(prios.loc[prios.Prio != 0, 'Feature'])
     path = os.path.join(path, "Heatmaps")
 
-    kwargs = dict(plot_corr=False, pvalues=False, significant=True,
-                  method=method, plot_significant=False, threshold=p_threshold,
-                  min_cor=min_cor)
+    kwargs = dict(
+        plot_corr=False, pvalues=False, significant=True,
+        method=method, plot_significant=False, threshold=p_threshold,
+        min_cor=min_cor
+    )
 
-    _, new_df = correlation_heatmap(df=df, features=features, save=False,
-                                    **kwargs)
+    _, new_df = correlation_heatmap(
+        df=df, features=features, save=False,
+        **kwargs
+    )
 
     for idx in df.index:
 
@@ -486,14 +540,18 @@ def significant_corrs_heatmap(method='pearson', p_threshold=5, min_cor=0,
 
     kwargs['plot_significant'] = True
 
-    fig, _ = correlation_heatmap(features=features, save=save, path=path,
-                                 df=df, **kwargs)
+    fig, _ = correlation_heatmap(
+        features=features, save=save, path=path,
+        df=df, **kwargs
+    )
 
     return fig, features
 
 
-def get_success_moderators(diff='RF_Diff', splits=2, save=False, plot=True,
-                           sort_col='meanchange', drop_fits=True):
+def get_success_moderators(
+        diff='RF_Diff', splits=2, save=False, plot=True,
+        sort_col='meanchange', drop_fits=True
+):
     df = load_data('data_prep_with_personal.csv')
     obsolete = 'NSt_Diff' if diff == 'RF_Diff' else 'RF_Diff'
     df = df.drop(['User', obsolete], axis=1)
@@ -528,11 +586,15 @@ def get_success_moderators(diff='RF_Diff', splits=2, save=False, plot=True,
     moderators = moderators.sort_values(by=sort_col, ascending=False)
 
     if drop_fits:
-        moderators = moderators.drop([x
-                                      for x in moderators.index if 'Fit' in x])
+        moderators = moderators.drop(
+            [x
+             for x in moderators.index if 'Fit' in x]
+        )
 
-    prios = load_data('features_categories.csv',
-                      rm_first_col=False).set_index('Feature')
+    prios = load_data(
+        'features_categories.csv',
+        rm_first_col=False
+    ).set_index('Feature')
 
     numeric = moderators.copy().reset_index()
     feature_prios = []
@@ -547,9 +609,11 @@ def get_success_moderators(diff='RF_Diff', splits=2, save=False, plot=True,
     df = moderators.copy().reset_index().rename(columns={'index': 'Feature'})
 
     if plot:
-        plot_significant_corrs(numeric, df, save=save,
-                               filename=diff + '_moderators',
-                               title='Influence of Features on ' + diff)
+        plot_significant_corrs(
+            numeric, df, save=save,
+            filename=diff + '_moderators',
+            title='Influence of Features on ' + diff
+        )
 
     return moderators
 
@@ -582,8 +646,10 @@ def simulate_random_influences(reps) -> pd.DataFrame:
     return pd.DataFrame(random_moderators)
 
 
-def summarize_feature_influences(moderators, diff='RF_Diff',
-                                 save=False) -> Tuple[plt.Figure, np.ndarray]:
+def summarize_feature_influences(
+        moderators, diff='RF_Diff',
+        save=False
+) -> Tuple[plt.Figure, np.ndarray]:
     """Summarize cor, ... with learn success for features in Histogram + qqPlot
 
     Args:
@@ -608,11 +674,15 @@ def summarize_feature_influences(moderators, diff='RF_Diff',
         sns.histplot(data=moderators, x=col, bins=30, ax=ax[idx, 0])
         ax[idx, 0].set(xlabel=labs[idx])
 
-        stats.probplot(moderators[col] / np.std(moderators[col]),
-                       dist="norm", plot=ax[idx, 1], fit=False)
+        stats.probplot(
+            moderators[col] / np.std(moderators[col]),
+            dist="norm", plot=ax[idx, 1], fit=False
+        )
 
-        stats.probplot(random_mods[col] / np.std(random_mods[col]),
-                       dist="norm", plot=ax[idx, 2], fit=False)
+        stats.probplot(
+            random_mods[col] / np.std(random_mods[col]),
+            dist="norm", plot=ax[idx, 2], fit=False
+        )
 
         legend = ['real features', 'random features']
         for i in [1, 2]:

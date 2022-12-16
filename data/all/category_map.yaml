@@ -1,0 +1,13 @@
+!!python/object/apply:collections.OrderedDict
+- - - 0
+    - Grundgrößen zur Kraft
+  - - 1
+    - Mehrkraftsysteme
+  - - 2
+    - Besondere Kräfte
+  - - 3
+    - 'Kraft und Translationsbewegungen '
+  - - 4
+    - 'Kraft und Rotationsbewegungen '
+  - - 5
+    - Reibungskräfte
