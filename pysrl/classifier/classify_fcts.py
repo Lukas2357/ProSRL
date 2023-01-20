@@ -42,8 +42,8 @@ def merge_pers_feature(rm_incomplete_user=True, fill_na=True) -> pd.DataFrame:
     except IndexError:
         pass
 
-    tot = pd.merge(df, load_prep_data(), left_on='user_id', right_index=True)
-    tot["User"] = tot["user_id"]
+    tot = pd.merge(df, load_prep_data(), left_on='User', right_index=True)
+    tot["User"] = tot["User"]
 
     if rm_incomplete_user:
         tot = tot.dropna(subset=['NSt_Post'])

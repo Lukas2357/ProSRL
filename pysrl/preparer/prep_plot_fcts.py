@@ -194,7 +194,7 @@ def learn_types_lineplots(cluster=pd.Series(dtype=str), save=True, dpi=120,
                 title = str(c_label)
             else:
                 title = str('User Lineplots') + '\n' * (rows // 5)
-            # fig.suptitle(title, size=24, weight='bold')
+            fig.suptitle(title, size=24, weight='bold')
             plt.tight_layout()
 
         file = f'{len(c_sizes)}C_' + str(c_label) + file_extension

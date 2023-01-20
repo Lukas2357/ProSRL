@@ -62,7 +62,7 @@ def load_input(filename: str, columns=None, sep=',', year=None) -> pd.DataFrame:
     if year is None:
         year = YEAR
 
-    input_path = os.path.join(ROOT, "input", year)
+    input_path = os.path.join(ROOT, "input", str(year))
     if year == '2022' and filename == 'data_complete.csv':
         sep = ';'
 

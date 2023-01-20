@@ -129,7 +129,7 @@ def generate_model(alg: str, n_cluster: int, data: pd.DataFrame) -> any:
         
     """
     if alg == 'k_means':
-        model = KMeans(n_clusters=n_cluster)
+        model = KMeans(n_clusters=n_cluster, n_init=10)
         
     elif alg == 'meanshift':
         bandwidth = estimate_bandwidth(data)
