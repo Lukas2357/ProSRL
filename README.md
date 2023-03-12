@@ -1,4 +1,4 @@
-# <pre>ProSRL Datenanalyse (pysrl)   0.3.6</pre>
+# <pre>ProSRL Datenanalyse (pysrl)   1.3.6</pre>
 
 Das ist ein Projekt zur Datenanalyse von selbstreguliertem Lernen (SRL) mittels einer digitalen Lernplattform.
 Im Zentrum steht das package pysrl, das Modul zum Crawlen der Website, Vorbereiten der Daten, Clustering und Klassifizierung enthält. Es lässt sich über die main.py Datei ansteuern.
