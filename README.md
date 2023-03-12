@@ -3,6 +3,16 @@
 Das ist ein Projekt zur Datenanalyse von selbstreguliertem Lernen (SRL) mittels einer digitalen Lernplattform.
 Im Zentrum steht das package pysrl, das Modul zum Crawlen der Website, Vorbereiten der Daten, Clustering und Klassifizierung enthält. Es lässt sich über die main.py Datei ansteuern.
 
+Mit Hilfe des Codes lassen sich zeitliche Nutzerprofile analysieren:
+
+![image](https://user-images.githubusercontent.com/65038289/224548736-444441e7-a432-4b63-a33f-e4d114b96012.png)
+
+Außerdem können über 100 daraus extrahierte Prozessfeature auf ihren Einfluss bezüglich des Lernzuwachses der Studierenden analysiert werden:
+
+![image](https://user-images.githubusercontent.com/65038289/224548768-7f6295a2-953d-40f8-91ca-25165667f5da.png)
+
+Es ist zu beachten, dass die Ergebnisse aufgrund der geringen Datenlage weitestgehend nicht statistisch signifikant waren.
+
 ## Vorbemerkungen
 
 Das pysrl Package besteht aus einer analysis.py Datei, die eine Analyst Klasse enthält, die alle Funktionalitäten des Packages bündelt. Dazu gibt es eine Reihe Module (classifier, cluster, ...), die diverse Submodule und Funktionen enthalten.
