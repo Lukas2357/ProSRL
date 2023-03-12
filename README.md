@@ -7,11 +7,7 @@ Mit Hilfe des Codes lassen sich zeitliche Nutzerprofile analysieren:
 
 ![image](https://user-images.githubusercontent.com/65038289/224548736-444441e7-a432-4b63-a33f-e4d114b96012.png)
 
-Außerdem können über 100 daraus extrahierte Prozessfeature auf ihren Einfluss bezüglich des Lernzuwachses der Studierenden analysiert werden:
-
-![image](https://user-images.githubusercontent.com/65038289/224548992-0d1cf25a-e513-4dea-8cc2-9477cf624cb5.png)
-
-Es ist zu beachten, dass die Ergebnisse aufgrund der geringen Datenlage weitestgehend nicht statistisch signifikant waren.
+Außerdem können über 100 daraus extrahierte Prozessfeature auf ihren Einfluss bezüglich des Lernzuwachses der Studierenden analysiert werden. Es ist zu beachten, dass die Ergebnisse aufgrund der geringen Datenlage weitestgehend nicht statistisch signifikant waren.
 
 ## Vorbemerkungen
 
